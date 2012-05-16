@@ -46,6 +46,8 @@ import SocketServer
 import logging
 import logging.handlers
 
+import pyexiv2
+
 #pike
 from datetime import datetime
 import ConfigParser
@@ -424,6 +426,15 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
       os.chown(imagePath,uid,gid)
     if file_mode!="":
       os.chmod(imagePath,string.atoi(file_mode))
+
+    metadata = pyexiv2.ImageMetadata(imagePath)
+    metadata.read()
+    if 'Exif.Image.DateTime' in metadata.exif_keys:
+        d = metadata['Exif.Image.DateTime'].value
+        seconds = time.mktime(d.timetuple())
+        os.utime(imagePath, (seconds, seconds))
+    else:
+        eyeFiLogger.error("Could not find Exif.Image.DateTime field in EXIF information")
 
     # Create the XML document to send back
     doc = xml.dom.minidom.Document()
