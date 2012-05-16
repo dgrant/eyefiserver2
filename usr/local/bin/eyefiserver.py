@@ -44,6 +44,7 @@ import BaseHTTPServer
 import SocketServer
 
 import logging
+import logging.handlers
 
 #pike
 from datetime import datetime
@@ -581,7 +582,7 @@ def main():
   
   # open file logging
   logfile = sys.argv[2]
-  fileHandler = logging.FileHandler(logfile,"w",encoding=None)
+  fileHandler = logging.handlers.TimedRotatingFileHandler(logfile, "D", 7, backupCount=7, encoding=None)
   fileHandler.setFormatter(eyeFiLoggingFormat)
   eyeFiLogger.addHandler(fileHandler)
 
