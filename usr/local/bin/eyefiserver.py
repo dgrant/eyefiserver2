@@ -378,20 +378,22 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
     imageTarfileName = handler.extractedElements["filename"]
 
     #pike
-    #uid = self.server.config.getint('EyeFiServer','upload_uid')
-    #gid = self.server.config.getint('EyeFiServer','upload_gid')
-    #mode = self.server.config.get('EyeFiServer','upload_mode')
-    #eyeFiLogger.debug("Using uid/gid %d/%d"%(uid,gid))
-    #eyeFiLogger.debug("Using mode " + mode)
+    uid = self.server.config.getint('EyeFiServer','upload_uid')
+    gid = self.server.config.getint('EyeFiServer','upload_gid')
+    file_mode = self.server.config.get('EyeFiServer','upload_file_mode')
+    dir_mode = self.server.config.get('EyeFiServer','upload_dir_mode')
+    eyeFiLogger.debug("Using uid/gid %d/%d"%(uid,gid))
+    eyeFiLogger.debug("Using file_mode " + file_mode)
+    eyeFiLogger.debug("Using dir_mode " + dir_mode)
     
     now = datetime.now()
     uploadDir = now.strftime(self.server.config.get('EyeFiServer','upload_dir'))
     if not os.path.isdir(uploadDir):
        os.makedirs(uploadDir)
-       #if uid!=0 and gid!=0:
-       #  os.chown(uploadDir,uid,gid)
-       #if mode!="":
-       #  os.chmod(uploadDir,string.atoi(mode))
+       if uid!=0 and gid!=0:
+         os.chown(uploadDir,uid,gid)
+       if file_mode!="":
+         os.chmod(uploadDir,string.atoi(dir_mode))
          
     imageTarPath = os.path.join(uploadDir,imageTarfileName)
     eyeFiLogger.debug("Generated path " + imageTarPath)
@@ -406,11 +408,6 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
     fileHandle.close()
     eyeFiLogger.debug("Closed file " + imageTarPath)
         
-    #if uid!=0 and gid!=0:
-    #  os.chown(imageTarPath,uid,gid)
-    #if mode!="":
-    #  os.chmod(imageTarPath,string.atoi(mode))
-         
     eyeFiLogger.debug("Extracting TAR file " + imageTarPath)
     imageTarfile = tarfile.open(imageTarPath)
     imageTarfile.extractall(path=uploadDir)
@@ -420,6 +417,12 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
 
     eyeFiLogger.debug("Deleting TAR file " + imageTarPath)
     os.remove(imageTarPath)
+
+    imagePath = os.path.splitext(imageTarPath)[0]
+    if uid!=0 and gid!=0:
+      os.chown(imagePath,uid,gid)
+    if file_mode!="":
+      os.chmod(imagePath,string.atoi(file_mode))
 
     # Create the XML document to send back
     doc = xml.dom.minidom.Document()
