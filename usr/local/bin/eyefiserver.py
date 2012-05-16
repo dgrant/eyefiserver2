@@ -476,7 +476,21 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
     doc.appendChild(SOAPElement)
 
     return doc.toxml(encoding="UTF-8")
-    
+
+  def _get_mac_uploadkey_dict(self):
+    macs = {}
+    upload_keys = {}
+    for key, value in self.server.config.items('EyeFiServer'):
+      if key.find('upload_key_') == 0:
+        index = int(key[11:])
+        upload_keys[index] = value
+      elif key.find('mac_') == 0:
+        index = int(key[4:])
+        macs[index] = value
+    d = {}
+    for key in macs.keys():
+      d[macs[key]] = upload_keys[key]
+    return d
      
   def startSession(self, postData):  
     eyeFiLogger.debug("Delegating the XML parsing of startSession postData to EyeFiContentHandler()")
@@ -486,10 +500,13 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
     eyeFiLogger.debug("Extracted elements: " + str(handler.extractedElements))
     
     # Retrieve it from C:\Documents and Settings\<User>\Application Data\Eye-Fi\Settings.xml
+    mac_to_uploadkey_map = self._get_mac_uploadkey_dict()
+    mac = handler.extractedElements["macaddress"]
+    upload_key = mac_to_uploadkey_map[mac]
+    eyeFiLogger.debug("Got MAC address of " + mac)
+    eyeFiLogger.debug("Setting Eye-Fi upload key to " + upload_key)
     
-    eyeFiLogger.debug("Setting Eye-Fi upload key to " + self.server.config.get('EyeFiServer','upload_key'))
-    
-    credentialString = handler.extractedElements["macaddress"] + handler.extractedElements["cnonce"] + self.server.config.get('EyeFiServer','upload_key');
+    credentialString = mac + handler.extractedElements["cnonce"] + upload_key
     eyeFiLogger.debug("Concatenated credential string (pre MD5): " + credentialString)
 
     # Return the binary data represented by the hexadecimal string
