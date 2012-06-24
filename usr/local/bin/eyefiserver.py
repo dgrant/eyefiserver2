@@ -360,7 +360,25 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
     
     # Read contentLength bytes worth of data
     eyeFiLogger.debug("Attempting to read " + str(contentLength) + " bytes of data")
-    postData = self.rfile.read(contentLength)
+    # postData = self.rfile.read(contentLength)
+    try:
+        from StringIO import StringIO
+        import tempfile
+    except ImportError:
+        eyeFiLogger.debug("No StringIO module")
+    chunksize = 1048576 # 1MB
+    mem = StringIO()
+    while 1:
+        remain = contentLength - mem.tell()
+        if remain <= 0: break
+        chunk = self.rfile.read(min(chunksize, remain))
+        if not chunk: break
+        mem.write(chunk)
+        print remain
+    print "Finished"
+    postData = mem.getvalue()
+    mem.close()
+    
     eyeFiLogger.debug("Finished reading " + str(contentLength) + " bytes of data")
 
     # TODO: Implement some kind of visual progress bar
@@ -524,16 +542,10 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
     eyeFiLogger.debug("Using file_mode " + file_mode)
     eyeFiLogger.debug("Using dir_mode " + dir_mode)
     
-    now = datetime.now()
-    uploadDir = now.strftime(self.server.config.get('EyeFiServer','upload_dir'))
-    if not os.path.isdir(uploadDir):
-       os.makedirs(uploadDir)
-       if uid!=0 and gid!=0:
-         os.chown(uploadDir,uid,gid)
-       if file_mode!="":
-         os.chmod(uploadDir,string.atoi(dir_mode))
+    tempDir = os.path.dirname(self.server.config.get('EyeFiServer','upload_dir'))
+
          
-    imageTarPath = os.path.join(uploadDir,imageTarfileName)
+    imageTarPath = os.path.join(tempDir, imageTarfileName)
     eyeFiLogger.debug("Generated path " + imageTarPath)
     
 
@@ -548,19 +560,35 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
         
     eyeFiLogger.debug("Extracting TAR file " + imageTarPath)
     imageTarfile = tarfile.open(imageTarPath)
-    imageTarfile.extractall(path=uploadDir)
+    
+    for member in imageTarfile.getmembers():
+        #timezone = self.server.config.getint('EyeFiServer','timezone')
+        timezone = 0
+        imageDate = datetime.fromtimestamp(member.mtime) - timedelta(hours=timezone)
+        uploadDir = imageDate.strftime(self.server.config.get('EyeFiServer','upload_dir'))
+        eyeFiLogger.debug("Creating folder " + uploadDir)
+        if not os.path.isdir(uploadDir):
+            os.makedirs(uploadDir)
+            if uid!=0 and gid!=0:
+                 os.chown(uploadDir,uid,gid)
+            if file_mode!="":
+                 os.chmod(uploadDir,string.atoi(dir_mode))
+
+            
+        f=imageTarfile.extract(member, uploadDir)
 
     eyeFiLogger.debug("Closing TAR file " + imageTarPath)
     imageTarfile.close()
-
+    
+    
+       
     eyeFiLogger.debug("Deleting TAR file " + imageTarPath)
     os.remove(imageTarPath)
 
-    imagePath = os.path.splitext(imageTarPath)[0]
     if uid!=0 and gid!=0:
-      os.chown(imagePath,uid,gid)
+      os.chown(uploadDir,uid,gid)
     if file_mode!="":
-      os.chmod(imagePath,string.atoi(file_mode))
+      os.chmod(uploadDir,string.atoi(file_mode))
 
     try:
         import pyexiv2
@@ -574,6 +602,7 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
         else:
             eyeFiLogger.error("Could not find Exif.Image.DateTime field in EXIF information")
     except ImportError, e:
+        eyeFiLogger.error("pyexiv2 module not present. Could not read EXIF information.")
         if e.message != 'No module named pyexiv2':
             raise
 
@@ -629,7 +658,7 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
     doc.appendChild(SOAPElement)
 
     return doc.toxml(encoding="UTF-8")
-
+    
   def _get_mac_uploadkey_dict(self):
     macs = {}
     upload_keys = {}
@@ -773,10 +802,10 @@ def runEyeFi():
     #eyeFiServer.socket.close()
     
   except KeyboardInterrupt:
-    eyeFiServer.socket.close()
-    pass
     #eyeFiServer.socket.close()
-    #eyeFiServer.shutdown()
+    pass
+    
+    
 
   #eyeFiLogger.info("Eye-Fi server stopped")
 
