@@ -48,8 +48,8 @@ d_start() {
                 --pidfile $PIDFILE \
 		--startas $DAEMON \
 		--background \
-                --make-pidfile start \
-                -- $CFGFILE $LOGFILE
+                --make-pidfile \
+                -- instance $CFGFILE $LOGFILE
 }
 
 
