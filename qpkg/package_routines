@@ -112,8 +112,10 @@ NAME=eyefiserver
 #
 PKG_POST_REMOVE="{
 $CMD_RM -rf ${SYS_WEB_PATH}/${NAME}
-$CMD_RM -f ${SYS_CONFIG_DIR}/${NAME}.conf
 $CMD_RM -f ${SYS_INIT_DIR}/${NAME}
+$CMD_RM -f ${SYS_CONFIG_DIR}/${NAME}.conf
+$CMD_RM -f /etc/${NAME}.conf
+$CMD_RM -f /usr/local/bin/${NAME}.py
 $CMD_SED -i /${NAME}/d ${SYS_QPKG_INSTALL_PATH}/Optware/etc/sudoers
 }"
 #

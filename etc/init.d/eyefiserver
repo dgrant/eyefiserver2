@@ -1,16 +1,17 @@
 #!/bin/sh
 NAME=eyefiserver
 CONF=/etc/config/qpkg.conf
-CFGFILE=/etc/config/$NAME.conf
+CFGFILE=/etc/$NAME.conf
 LOGFILE=/var/log/$NAME.log
+DAEMON=/usr/local/bin/$NAME.py
 if [ -f $CONF ]; then
 	QPKG_NAME="EyeFiServer"
 	QPKG_DIR=$(/sbin/getcfg $QPKG_NAME Install_Path -d "" -f $CONF)
 	ENABLED=$(/sbin/getcfg $QPKG_NAME Enable -u -d FALSE -f $CONF)
-	DAEMON=$QPKG_DIR/$NAME.py
+	[ -a $DAEMON ] || ln -s $QPKG_DIR/$NAME.py $DAEMON
+	[ -a $CFGFILE ] || ln -s /etc/config/$NAME.conf $CFGFILE
 else
 	ENABLED="TRUE"
-	DAEMON=/usr/local/bin/$NAME.py
 fi
 case "$1" in
 start)
