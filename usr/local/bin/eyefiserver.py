@@ -50,6 +50,7 @@ import logging.handlers
 
 import atexit
 from signal import SIGTERM
+import signal
 
 #pike
 from datetime import datetime
@@ -98,6 +99,8 @@ class Daemon:
                     sys.stderr.write("fork #2 failed: %d (%s)\n" % (e.errno, e.strerror))
                     sys.exit(1)
    
+            message = "Daemon started.\n"
+            sys.stderr.write(message)
             # redirect standard file descriptors
             sys.stdout.flush()
             sys.stderr.flush()
@@ -175,6 +178,29 @@ class Daemon:
             self.stop()
             self.start()
 
+    def reload(self):
+            """
+            Reload configuration
+            """
+            # Get the pid from the pidfile
+            try:
+                    pf = file(self.pidfile,'r')
+                    pid = int(pf.read().strip())
+                    pf.close()
+            except IOError:
+                    pid = None
+   
+            if not pid:
+                    message = "pidfile %s does not exist. Daemon not running?\n"
+                    sys.stderr.write(message % self.pidfile)
+                    return # not an error in a restart
+
+            # Try killing the daemon process       
+            try:
+                    os.kill(pid, signal.SIGUSR1)
+            except OSError, err:
+                    print str(err)
+                    
     def run(self):
             """
             You should override this method when you subclass Daemon. It will be called after the process has been
@@ -808,12 +834,16 @@ def runEyeFi():
 
   #eyeFiLogger.info("Eye-Fi server stopped")
 
+def reloadEyeFi(signum, frame):
+    eyeFiLogger.debug("Reloading configuration")
+    
 class MyDaemon(Daemon):
   def run(self):
     runEyeFi()
 
 def main():
-  pid_file = '/tmp/eyeFiServer.pid'
+  pid_file = '/tmp/eyefiserver.pid'
+  signal.signal(signal.SIGUSR1, reloadEyeFi)
   if len(sys.argv) > 2:
     if 'start' == sys.argv[1]:
       daemon = MyDaemon(pid_file)
@@ -824,6 +854,10 @@ def main():
     elif 'restart' == sys.argv[1]:
       daemon = MyDaemon(pid_file)
       daemon.restart()
+    elif 'reload' == sys.argv[1]:
+      daemon = MyDaemon(pid_file)
+#      daemon.reload()
+      daemon.restart()
     elif 'instance' == sys.argv[1]:
       runEyeFi()
     else:
@@ -831,9 +865,8 @@ def main():
       sys.exit(2)
     sys.exit(0)
   else:
-    print "usage: %s start|stop|restart|instance conf_file log_file" % sys.argv[0]
+    print "usage: %s start|stop|restart|reload|instance conf_file log_file" % sys.argv[0]
     sys.exit(2)
 
 if __name__ == "__main__":
   main()
-
