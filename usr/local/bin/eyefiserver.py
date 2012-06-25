@@ -557,39 +557,38 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
 
     fileHandle.close()
     eyeFiLogger.debug("Closed file " + imageTarPath)
-        
+
     eyeFiLogger.debug("Extracting TAR file " + imageTarPath)
     imageTarfile = tarfile.open(imageTarPath)
-    
-    for member in imageTarfile.getmembers():
-        #timezone = self.server.config.getint('EyeFiServer','timezone')
-        timezone = 0
-        imageDate = datetime.fromtimestamp(member.mtime) - timedelta(hours=timezone)
-        uploadDir = imageDate.strftime(self.server.config.get('EyeFiServer','upload_dir'))
-        eyeFiLogger.debug("Creating folder " + uploadDir)
-        if not os.path.isdir(uploadDir):
-            os.makedirs(uploadDir)
-            if uid!=0 and gid!=0:
-                 os.chown(uploadDir,uid,gid)
-            if file_mode!="":
-                 os.chmod(uploadDir,string.atoi(dir_mode))
 
-            
-        f=imageTarfile.extract(member, uploadDir)
+    for member in imageTarfile.getmembers():
+	#timezone = self.server.config.getint('EyeFiServer','timezone')
+	timezone = -7
+	imageDate = datetime.fromtimestamp(member.mtime) - timedelta(hours=timezone)
+	uploadDir = imageDate.strftime(self.server.config.get('EyeFiServer','upload_dir'))
+	eyeFiLogger.debug("Creating folder " + uploadDir)
+	if not os.path.isdir(uploadDir):
+	    os.makedirs(uploadDir)
+	    if uid != 0 and gid != 0:
+		 os.chown(uploadDir, uid, gid)
+	    if file_mode != "":
+		 os.chmod(uploadDir, string.atoi(dir_mode))
+
+	f=imageTarfile.extract(member, uploadDir)
+	imagePath = os.path.join(uploadDir, member.name)
+	eyeFiLogger.debug("imamgePath " + imagePath)
+	if uid != 0 and gid != 0:
+	  os.chown(imagePath, uid, gid)
+	if file_mode != "":
+	  os.chmod(imagePath, string.atoi(file_mode))
 
     eyeFiLogger.debug("Closing TAR file " + imageTarPath)
     imageTarfile.close()
-    
-    
-       
+
     eyeFiLogger.debug("Deleting TAR file " + imageTarPath)
     os.remove(imageTarPath)
 
-    if uid!=0 and gid!=0:
-      os.chown(uploadDir,uid,gid)
-    if file_mode!="":
-      os.chmod(uploadDir,string.atoi(file_mode))
-
+ 
     try:
         import pyexiv2
 
