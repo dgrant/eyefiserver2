@@ -9,7 +9,7 @@
 	<script src="js/jquery.min.js" type="text/javascript"></script>
 	<script src="js/functions.js" type="text/javascript"></script>
 </head>
-<body onload="refreshfields();">
+<body onload="init();">
 <div id="wrapper">
 <div id="header">
 	<img id="logo" src="images/eyefi-logo-v2.png" width="99" height="43" alt="Eye-Fi" />
@@ -103,21 +103,19 @@
 		</fieldset>
 
 		<fieldset class="bordered">
-			<legend class="bordered">Owner</legend>
-			<h3 class="boldGreyContent">
-				UID <input id="upload_uid" style="width: 30px;"/>
-				GID <input id="upload_gid" style="width: 30px;"/>
-			</h3>
-			<h3 class="greyContent">
-				The UID of the user and the GID of the group that you want to own the uploaded images
-			</h3>
-		</fieldset>
-
-		<fieldset class="bordered">
 			<legend class="bordered">Permissions</legend>
 			<h3 class="boldGreyContent">
-				Files <input id="upload_file_mode" style="width: 25px;" />
-				Directories <input id="upload_dir_mode" style="width: 25px;" />
+				<table width="100%"><tr>
+				<td></td><td colspan="3">Files</td><td colspan="3">Directories</td>
+				</tr><tr>
+				<td></td><td width="15%">read</td><td width="15%">write</td><td width="15%">execute</td><td width="15%">read</td><td width="15%">write</td><td width="15%">execute</td>
+				</tr><tr>
+				<td height="20"><select id="upload_uid" style="width: 125px;" alt="Owner" title="Owner"></select></td><td><input id="upload_file_mode_0" type="checkbox"></td><td><input id="upload_file_mode_1" type="checkbox"></td><td><input id="upload_file_mode_2" type="checkbox"></td><td><input id="upload_dir_mode_0" type="checkbox"></td><td><input id="upload_dir_mode_1" type="checkbox"></td><td><input id="upload_dir_mode_2" type="checkbox"></td>
+				</tr><tr>
+				<td height="20"><select id="upload_gid" style="width: 125px;" alt="Group" title="Group"></select></td><td><input id="upload_file_mode_3" type="checkbox"></td><td><input id="upload_file_mode_4" type="checkbox"></td><td><input id="upload_file_mode_5" type="checkbox"></td><td><input id="upload_dir_mode_3" type="checkbox"></td><td><input id="upload_dir_mode_4" type="checkbox"></td><td><input id="upload_dir_mode_5" type="checkbox"></td>
+				</tr><tr>
+				<td style="text-align:left;" height="20">Others</td><td><input id="upload_file_mode_6" type="checkbox"></td><td><input id="upload_file_mode_7" type="checkbox"></td><td><input id="upload_file_mode_8" type="checkbox"></td><td><input id="upload_dir_mode_6" type="checkbox"></td><td><input id="upload_dir_mode_7" type="checkbox"></td><td><input id="upload_dir_mode_8" type="checkbox"></td>
+				</tr></table>
 			</h3>
 			<h3 class="greyContent">
 				The permissions to use for the uploaded images and for the directories that are created

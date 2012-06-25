@@ -16,7 +16,9 @@ a {
 a img {
 	border: none;
 }
-
+td {
+	text-align: center;
+}
 div.loginSky {
 	background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#1C9CD8), to(#71A641), color-stop(.19,#30B6E9),color-stop(.32,#44C8F5), color-stop(.799,#FFFFFF),color-stop(.8,#F4F7D3),color-stop(.801,#C6D628),color-stop(.879,#8BB43E),color-stop(.88,#92BB3D),color-stop(.881,#AACF39));
 	background-color: #9fe0f8;

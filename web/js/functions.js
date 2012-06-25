@@ -77,6 +77,11 @@ function activate(a){
 	break;
 	}
 }
+function init(){
+	fillselect(upload_uid);
+	fillselect(upload_gid);
+	refreshfields();
+}
 function refreshlog()
 {
 	$.get("api.cgi?act=getlog", function(data){
@@ -95,10 +100,10 @@ function refreshfields()
 	refreshfield(mac_1);
 	refreshfield(upload_key_1);
 	refreshfield(upload_dir);
-	refreshfield(upload_uid);
-	refreshfield(upload_gid);
-	refreshfield(upload_file_mode);
-	refreshfield(upload_dir_mode);
+	refreshselect(upload_uid);
+	refreshselect(upload_gid);
+	refreshcheckboxes('upload_file_mode');
+	refreshcheckboxes('upload_dir_mode');
 }
 function refreshfield(field)
 {
@@ -106,9 +111,37 @@ function refreshfield(field)
 		field.value=data;
 	});
 }
+function refreshselect(field)
+{
+	$.get("api.cgi?act=getval&name="+field.id, function(data){
+	selected = field.id+'_'+data.split('\n')[0];
+		a=document.getElementById(field.id+'_'+data.split('\n')[0]);
+		a.selected=true;
+	});
+}
+function refreshcheckboxes(field)
+{
+	$.get("api.cgi?act=getval&name="+field, function(data){
+		for(i=8; i>=0; i--){
+			document.getElementById(field+'_'+i).checked=data&1!=0;
+			data>>=1;
+		}
+	});
+}
+function getcheckboxes(field)
+{
+	var val;
+	for(i=0; i<=8; i++){
+		val<<=1;
+		if( document.getElementById(field+'_'+i).checked == true){
+			val++;
+		}
+	}
+	return val;
+}
 function apply()
 {
-	$.get("api.cgi?act=save&mac_0="+mac_0.value+"&upload_key_0="+upload_key_0.value+"&mac_1="+mac_1.value+"&upload_key_1="+upload_key_1.value+"&host_name="+host_name.value+"&host_port="+host_port.value+"&upload_dir="+upload_dir.value+"&upload_uid="+upload_uid.value+"&upload_gid="+upload_gid.value+"&upload_file_mode="+upload_file_mode.value+"&upload_dir_mode="+upload_dir_mode.value, function(data){
+	$.get("api.cgi?act=save&mac_0="+mac_0.value+"&upload_key_0="+upload_key_0.value+"&mac_1="+mac_1.value+"&upload_key_1="+upload_key_1.value+"&host_name="+host_name.value+"&host_port="+host_port.value+"&upload_dir="+upload_dir.value+"&upload_uid="+upload_uid.value+"&upload_gid="+upload_gid.value+"&upload_file_mode="+getcheckboxes('upload_file_mode')+"&upload_dir_mode="+getcheckboxes('upload_dir_mode'), function(data){
 		alert(data);
 	});
 	return false;
@@ -117,4 +150,17 @@ function revert()
 {
 	refreshfields();
 	alert("Configuration reverted.");
+}
+function fillselect(field){
+	$.get("api.cgi?act=getuids&name="+field.id, function(data){
+		a=document.getElementById(field.id);
+		rows=data.split('\n');
+		for(row in rows){
+			cell=rows[row].split(':');
+			if(cell!=""){
+				a.options.add(new Option(cell[0],cell[1]));
+				a.options[a.options.length-1].setAttribute('id',field.id+'_'+cell[1]);
+			}
+		}
+	});
 }

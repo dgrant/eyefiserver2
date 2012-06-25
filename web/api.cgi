@@ -1,6 +1,6 @@
 #!/bin/sh
 NAME=eyefiserver
-CONFIG=/etc/config/$NAME.conf
+CONFIG=/etc/$NAME.conf
 DAEMON=/etc/init.d/$NAME
 LOG=/var/log/$NAME.log
 GREP=/bin/grep
@@ -25,7 +25,10 @@ case "$ACT" in
 		$GREP $PARAM: "$CONFIG" | $SED -r "s/^\s*$PARAM\s*[:=]\s*(.*)\s*$/\1/"
 		;;
 	save)
-		[ -L ${CONFIG} ] && CONFIG=`$READLINK "$CONFIG"`
+		while [ -L ${CONFIG} ]
+		do
+			CONFIG=`$READLINK "$CONFIG"`
+		done
 		if [ -w ${CONFIG} ]; then
 			save host_name
 			save host_port
@@ -48,6 +51,17 @@ case "$ACT" in
 		;;
 	getlog)
 		$CAT "$LOG"
+		;;
+	getuids)
+		case "$(getparam name)" in
+			upload_uid)
+				FILE=/etc/passwd
+				;;
+			upload_gid)
+				FILE=/etc/group
+				;;
+		esac
+		[ -z ${FILE} ] || $SED -r 's/^([^:]*):[^:]*:([^:]*):.*$/\1:\2/' "$FILE"
 		;;
 	*)
 		;;
