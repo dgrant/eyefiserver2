@@ -141,7 +141,7 @@ function getcheckboxes(field)
 }
 function apply()
 {
-	$.get("api.cgi?act=save&mac_0="+mac_0.value+"&upload_key_0="+upload_key_0.value+"&mac_1="+mac_1.value+"&upload_key_1="+upload_key_1.value+"&host_name="+host_name.value+"&host_port="+host_port.value+"&upload_dir="+upload_dir.value+"&upload_uid="+upload_uid.value+"&upload_gid="+upload_gid.value+"&upload_file_mode="+getcheckboxes('upload_file_mode')+"&upload_dir_mode="+getcheckboxes('upload_dir_mode'), function(data){
+	$.get("api.cgi?act=save&mac_0="+mac_0.value+"&upload_key_0="+upload_key_0.value+"&mac_1="+mac_1.value+"&upload_key_1="+upload_key_1.value+"&host_name="+host_name.value+"&host_port="+host_port.value+"&upload_dir="+escape(upload_dir.value)+"&upload_uid="+upload_uid.value+"&upload_gid="+upload_gid.value+"&upload_file_mode="+getcheckboxes('upload_file_mode')+"&upload_dir_mode="+getcheckboxes('upload_dir_mode'), function(data){
 		alert(data);
 	});
 	return false;
