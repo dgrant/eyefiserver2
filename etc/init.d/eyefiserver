@@ -10,6 +10,7 @@ if [ -f $QPKG_CONF ]; then
 	ENABLED=$(/sbin/getcfg $QPKG_NAME Enable -u -d FALSE -f $QPKG_CONF)
 	[ -a $DAEMON ] || ln -s $QPKG_DIR/$NAME.py $DAEMON
 	[ -a $CONF ] || ln -s /etc/config/$NAME.conf $CONF
+	DAEMON="/opt/bin/python $DAEMON"
 else
 	ENABLED="TRUE"
 fi
@@ -25,4 +26,3 @@ stop|restart|reload|instance)
 	echo "Usage: $0 {start|stop|restart|reload|instance}"
 	exit 1
 esac
-exit 0

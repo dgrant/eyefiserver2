@@ -99,8 +99,6 @@ class Daemon:
                     sys.stderr.write("fork #2 failed: %d (%s)\n" % (e.errno, e.strerror))
                     sys.exit(1)
    
-            message = "Daemon started.\n"
-            sys.stderr.write(message)
             # redirect standard file descriptors
             sys.stdout.flush()
             sys.stderr.flush()
@@ -193,7 +191,7 @@ class Daemon:
             if not pid:
                     message = "pidfile %s does not exist. Daemon not running?\n"
                     sys.stderr.write(message % self.pidfile)
-                    return # not an error in a restart
+                    return 1
 
             # Try killing the daemon process       
             try:
@@ -835,7 +833,12 @@ def runEyeFi():
   #eyeFiLogger.info("Eye-Fi server stopped")
 
 def reloadEyeFi(signum, frame):
-    eyeFiLogger.debug("Reloading configuration")
+    configfile = sys.argv[2]
+    eyeFiLogger.info("Reading config " + configfile)
+
+    config = ConfigParser.SafeConfigParser()
+    config.read(configfile)
+  
     
 class MyDaemon(Daemon):
   def run(self):
@@ -844,26 +847,26 @@ class MyDaemon(Daemon):
 def main():
   pid_file = '/tmp/eyefiserver.pid'
   signal.signal(signal.SIGUSR1, reloadEyeFi)
+  result = 0
   if len(sys.argv) > 2:
     if 'start' == sys.argv[1]:
       daemon = MyDaemon(pid_file)
-      daemon.start()
+      result = daemon.start()
     elif 'stop' == sys.argv[1]:
       daemon = MyDaemon(pid_file)
-      daemon.stop()
+      result = daemon.stop()
     elif 'restart' == sys.argv[1]:
       daemon = MyDaemon(pid_file)
-      daemon.restart()
+      result = daemon.restart()
     elif 'reload' == sys.argv[1]:
       daemon = MyDaemon(pid_file)
-#      daemon.reload()
-      daemon.restart()
+      result = daemon.reload()
     elif 'instance' == sys.argv[1]:
       runEyeFi()
     else:
       print "Unknown command"
       sys.exit(2)
-    sys.exit(0)
+    sys.exit(result)
   else:
     print "usage: %s start|stop|restart|reload|instance conf_file log_file" % sys.argv[0]
     sys.exit(2)
