@@ -1,25 +1,25 @@
 #!/bin/sh
 NAME=eyefiserver
-CONF=/etc/config/qpkg.conf
-CFGFILE=/etc/$NAME.conf
-LOGFILE=/var/log/$NAME.log
+QPKG_CONF=/etc/config/qpkg.conf
 DAEMON=/usr/local/bin/$NAME.py
-if [ -f $CONF ]; then
+CONF=/etc/$NAME.conf
+LOG=/var/log/$NAME.log
+if [ -f $QPKG_CONF ]; then
 	QPKG_NAME="EyeFiServer"
-	QPKG_DIR=$(/sbin/getcfg $QPKG_NAME Install_Path -d "" -f $CONF)
-	ENABLED=$(/sbin/getcfg $QPKG_NAME Enable -u -d FALSE -f $CONF)
+	QPKG_DIR=$(/sbin/getcfg $QPKG_NAME Install_Path -d "" -f $QPKG_CONF)
+	ENABLED=$(/sbin/getcfg $QPKG_NAME Enable -u -d FALSE -f $QPKG_CONF)
 	[ -a $DAEMON ] || ln -s $QPKG_DIR/$NAME.py $DAEMON
-	[ -a $CFGFILE ] || ln -s /etc/config/$NAME.conf $CFGFILE
+	[ -a $CONF ] || ln -s /etc/config/$NAME.conf $CONF
 else
 	ENABLED="TRUE"
 fi
 case "$1" in
 start)
 	[ "$ENABLED" == "FALSE" ] && echo "$QPKG_NAME is disabled." && exit 1
-	$DAEMON start $CFGFILE $LOGFILE
+	$DAEMON start $CONF $LOG
 	;;
 stop|restart|reload|instance)
-	$DAEMON $1 $CFGFILE $LOGFILE
+	$DAEMON $1 $CONF $LOG
 	;;
 *)
 	echo "Usage: $0 {start|stop|restart|reload|instance}"
