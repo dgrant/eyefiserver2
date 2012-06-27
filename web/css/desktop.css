@@ -1073,8 +1073,31 @@ div.dialogBlurb {
 div.settingsContent {
 	margin-top: -10px;
 	padding-bottom: 60px;
-	float: left;
-	width: 567px;
+	width: 767px;
+}
+
+#CardsSection
+{
+	background: transparent url('../images/dimicon-networks.jpg') no-repeat 0 40px;
+	padding-left: 200px;
+}
+
+#GeotaggingSection
+{
+	background: transparent url('../images/dimicon-geotagging.jpg') no-repeat 0 40px;
+	padding-left: 200px;
+}
+
+#UploadSection
+{
+	background: transparent url('../images/dimicon-photos.jpg') no-repeat 0 40px;
+	padding-left: 200px;
+}
+
+#LogSection
+{
+	background: transparent url('../images/dimicon-view.jpg') no-repeat 0 40px;
+	padding-left: 200px;
 }
 
 h1.settingsTitle {
