@@ -27,48 +27,52 @@ function unselecttab(b){
 function activate(a){
 	switch(a){
 	case 'Cards':
+		icon.setAttribute('src','images/dimicon-networks.jpg');
 		selecttab('Cards');
-		unselecttab('Host');
+		unselecttab('Geotagging');
 		unselecttab('Upload');
 		unselecttab('Log');
 		show('cards');
-		hide('host');
+		hide('geotagging');
 		hide('upload');
 		hide('log');
 		show('apply');
 		show('revert');
 	break;
-	case 'Host':
+	case 'Geotagging':
+		icon.setAttribute('src','images/dimicon-geotagging.jpg');
 		unselecttab('Cards');
-		selecttab('Host');
+		selecttab('Geotagging');
 		unselecttab('Upload');
 		unselecttab('Log');
 		hide('cards');
-		show('host');
+		show('geotagging');
 		hide('upload');
 		hide('log');
 		show('apply');
 		show('revert');
 	break;
 	case 'Upload':
+		icon.setAttribute('src','images/dimicon-photos.jpg');
 		unselecttab('Cards');
-		unselecttab('Host');
+		unselecttab('Geotagging');
 		selecttab('Upload');
 		unselecttab('Log');
 		hide('cards');
-		hide('host');
+		hide('geotagging');
 		show('upload');
 		hide('log');
 		show('apply');
 		show('revert');
 	break;
 	case 'Log':
+		icon.setAttribute('src','images/dimicon-view.jpg');
 		unselecttab('Cards');
-		unselecttab('Host');
+		unselecttab('Geotagging');
 		unselecttab('Upload');
 		selecttab('Log');
 		hide('cards');
-		hide('host');
+		hide('geotagging');
 		hide('upload');
 		hide('apply');
 		hide('revert');
@@ -93,8 +97,9 @@ function refreshlog()
 }
 function refreshfields()
 {
-	refreshfield(host_name);
-	refreshfield(host_port);
+	refreshcheckbox(geotag_enable);
+	refreshfield(geotag_lag);
+	refreshfield(geotag_accuracy);
 	refreshfield(mac_0);
 	refreshfield(upload_key_0);
 	refreshfield(mac_1);
@@ -109,6 +114,12 @@ function refreshfield(field)
 {
 	$.get("api.cgi?act=getval&name="+field.id, function(data){
 		field.value=data;
+	});
+}
+function refreshcheckbox(field)
+{
+	$.get("api.cgi?act=getval&name="+field.id, function(data){
+		document.getElementById(field.id).checked=data>0;
 	});
 }
 function refreshselect(field)
@@ -141,7 +152,7 @@ function getcheckboxes(field)
 }
 function apply()
 {
-	$.get("api.cgi?act=save&mac_0="+mac_0.value+"&upload_key_0="+upload_key_0.value+"&mac_1="+mac_1.value+"&upload_key_1="+upload_key_1.value+"&host_name="+host_name.value+"&host_port="+host_port.value+"&upload_dir="+escape(upload_dir.value)+"&upload_uid="+upload_uid.value+"&upload_gid="+upload_gid.value+"&upload_file_mode="+getcheckboxes('upload_file_mode')+"&upload_dir_mode="+getcheckboxes('upload_dir_mode'), function(data){
+	$.get("api.cgi?act=save&mac_0="+mac_0.value+"&upload_key_0="+upload_key_0.value+"&mac_1="+mac_1.value+"&upload_key_1="+upload_key_1.value+"&upload_dir="+upload_dir.value+"&upload_uid="+upload_uid.value+"&upload_gid="+upload_gid.value+"&upload_file_mode="+getcheckboxes('upload_file_mode')+"&upload_dir_mode="+getcheckboxes('upload_dir_mode')+"&geotag_enable="+(geotag_enable.checked?"1":"0")+"&geotag_lag="+geotag_lag.value+"&geotag_accuracy="+geotag_accuracy.value, function(data){
 		alert(data);
 	});
 	return false;

@@ -56,11 +56,13 @@ import signal
 from datetime import datetime
 import ConfigParser
 
+import simplejson
+import math
 
 class Daemon:
     """
     A generic daemon class.
-   
+
     Usage: subclass the Daemon class and override the run() method
     """
     def __init__(self, pidfile, stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
@@ -68,7 +70,7 @@ class Daemon:
             self.stdout = stdout
             self.stderr = stderr
             self.pidfile = pidfile
-   
+
     def daemonize(self):
             """
             do the UNIX double-fork magic, see Stevens' "Advanced
@@ -83,12 +85,12 @@ class Daemon:
             except OSError, e:
                     sys.stderr.write("fork #1 failed: %d (%s)\n" % (e.errno, e.strerror))
                     sys.exit(1)
-   
+
             # decouple from parent environment
             os.chdir("/")
             os.setsid()
             os.umask(0)
-   
+
             # do second fork
             try:
                     pid = os.fork()
@@ -98,7 +100,7 @@ class Daemon:
             except OSError, e:
                     sys.stderr.write("fork #2 failed: %d (%s)\n" % (e.errno, e.strerror))
                     sys.exit(1)
-   
+
             # redirect standard file descriptors
             sys.stdout.flush()
             sys.stderr.flush()
@@ -108,12 +110,12 @@ class Daemon:
             os.dup2(si.fileno(), sys.stdin.fileno())
             os.dup2(so.fileno(), sys.stdout.fileno())
             os.dup2(se.fileno(), sys.stderr.fileno())
-   
+
             # write pidfile
             atexit.register(self.delpid)
             pid = str(os.getpid())
             file(self.pidfile,'w+').write("%s\n" % pid)
-   
+
     def delpid(self):
             os.remove(self.pidfile)
 
@@ -128,12 +130,12 @@ class Daemon:
                     pf.close()
             except IOError:
                     pid = None
-   
+
             if pid:
                     message = "pidfile %s already exist. Daemon already running?\n"
                     sys.stderr.write(message % self.pidfile)
                     sys.exit(1)
-           
+
             # Start the daemon
             self.daemonize()
             self.run()
@@ -149,13 +151,13 @@ class Daemon:
                     pf.close()
             except IOError:
                     pid = None
-   
+
             if not pid:
                     message = "pidfile %s does not exist. Daemon not running?\n"
                     sys.stderr.write(message % self.pidfile)
                     return # not an error in a restart
 
-            # Try killing the daemon process       
+            # Try killing the daemon process
             try:
                     while 1:
                             os.kill(pid, SIGTERM)
@@ -187,18 +189,18 @@ class Daemon:
                     pf.close()
             except IOError:
                     pid = None
-   
+
             if not pid:
                     message = "pidfile %s does not exist. Daemon not running?\n"
                     sys.stderr.write(message % self.pidfile)
                     return 1
 
-            # Try killing the daemon process       
+            # Try killing the daemon process
             try:
                     os.kill(pid, signal.SIGUSR1)
             except OSError, err:
                     print str(err)
-                    
+
     def run(self):
             """
             You should override this method when you subclass Daemon. It will be called after the process has been
@@ -215,7 +217,7 @@ This is a standalone Eye-Fi Server that is designed to take the place of the Eye
 
 Starting this server creates a listener on port 59278. I use the BaseHTTPServer class included
 with Python. I look for specific POST/GET request URLs and execute functions based on those
-URLs. 
+URLs.
 
 
 
@@ -238,13 +240,13 @@ consoleHandler.setFormatter(eyeFiLoggingFormat)
 # Append both handlers to the main Eye Fi Server logger
 eyeFiLogger.addHandler(consoleHandler)
 
- 
+
 
 
 # Eye Fi XML SAX ContentHandler
 class EyeFiContentHandler(ContentHandler):
 
-  # These are the element names that I want to parse out of the XML    
+  # These are the element names that I want to parse out of the XML
   elementNamesToExtract = ["macaddress","cnonce","transfermode","transfermodetimestamp","fileid","filename","filesize","filesignature"]  
 
   # For each of the element names I create a dictionary with the value to False
@@ -256,12 +258,12 @@ class EyeFiContentHandler(ContentHandler):
 
   def __init__(self):
     self.extractedElements = {}
-    
+
     for elementName in self.elementNamesToExtract:
         self.elementsToExtract[elementName] = False
-  
+
   def startElement(self, name, attributes):
-  
+
     # If the name of the element is a key in the dictionary elementsToExtract
     # set the value to True
     if name in self.elementsToExtract:
@@ -276,7 +278,7 @@ class EyeFiContentHandler(ContentHandler):
 
 
   def characters(self, content):
-  
+
     for elementName in self.elementsToExtract:
       if self.elementsToExtract[elementName] == True:
         self.extractedElements[elementName] = content
@@ -284,14 +286,22 @@ class EyeFiContentHandler(ContentHandler):
 # Implements an EyeFi server
 class EyeFiServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
 
-  
+  def reload_config(self, signum, frame):
+    try:
+        configfile = sys.argv[2]
+        eyeFiLogger.info("Reloading configuration " + configfile)
+        self.config.read(configfile)
+    except:
+        eyeFiLogger.error("Error reloading configuration")
+
   def server_bind(self):
 
-    BaseHTTPServer.HTTPServer.server_bind(self)    
+    BaseHTTPServer.HTTPServer.server_bind(self)
     self.socket.settimeout(None)
+    signal.signal(signal.SIGUSR1, self.reload_config)
     self.run = True
 
-  def get_request(self):  
+  def get_request(self):
     while self.run:
       try:
         connection, address = self.socket.accept()
@@ -299,7 +309,7 @@ class EyeFiServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
 
         connection.settimeout(None)
         return (connection, address)
-        
+
       except socket.timeout:
         self.socket.close()
         pass
@@ -324,18 +334,18 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
   # pike: these seem unused ?
   protocol_version = 'HTTP/1.1'
   sys_version = ""
-  server_version = "Eye-Fi Agent/2.0.4.0 (Windows XP SP2)"    
+  server_version = "Eye-Fi Agent/2.0.4.0 (Windows XP SP2)"
 
   def do_QUIT (self):
     eyeFiLogger.debug("Got StopServer request .. stopping server")
     self.send_response(200)
     self.end_headers()
     self.server.stop()
-  
+
   def do_GET(self):
 
     eyeFiLogger.debug(self.command + " " + self.path + " " + self.request_version)
-    
+
     SOAPAction = ""
     eyeFiLogger.debug("Headers received in GET request:")
     for headerName in self.headers.keys():
@@ -343,14 +353,14 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
         eyeFiLogger.debug(headerName + ": " + headerValue)
         if( headerName == "soapaction"):
           SOAPAction = headerValue
-          
+
     # couldnt get this to work ..
     #if((self.client_address == "localhost") and (self.path == "/api/soap/eyefilm/v1x") and (SOAPAction == "\"urn:StopServer\"")):
     #  eyeFiLogger.debug("Got StopServer request .. stopping server")
     #  self.server.stop()
     # or, for python 2.6>
     #  self.server.shutdown()
-      
+
     self.send_response(200)
     self.send_header('Content-type','text/html')
     # I should be sending a Content-Length header with HTTP/1.1 but I am being lazy
@@ -359,7 +369,7 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
     self.wfile.write(self.client_address)
     self.wfile.write(self.headers)
     self.close_connection = 0
-    
+
 
   def do_POST(self):
     eyeFiLogger.debug(self.command + " " + self.path + " " + self.request_version)
@@ -367,21 +377,21 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
     SOAPAction = ""
     contentLength = ""
 
-    # Loop through all the request headers and pick out ones that are relevant    
-    
+    # Loop through all the request headers and pick out ones that are relevant
+
     eyeFiLogger.debug("Headers received in POST request:")
     for headerName in self.headers.keys():
       for headerValue in self.headers.getheaders(headerName):
 
         if( headerName == "soapaction"):
           SOAPAction = headerValue
-        
+
         if( headerName == "content-length"):
           contentLength = int(headerValue)
 
         eyeFiLogger.debug(headerName + ": " + headerValue)
 
-    
+
     # Read contentLength bytes worth of data
     eyeFiLogger.debug("Attempting to read " + str(contentLength) + " bytes of data")
     # postData = self.rfile.read(contentLength)
@@ -426,19 +436,19 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
       contentLength = len(response)
 
       eyeFiLogger.debug("StartSession response: " + response)
-            
+
       self.send_response(200)
-      self.send_header('Date', self.date_time_string())      
+      self.send_header('Date', self.date_time_string())
       self.send_header('Pragma','no-cache')
       self.send_header('Server','Eye-Fi Agent/2.0.4.0 (Windows XP SP2)')
-      self.send_header('Content-Type','text/xml; charset="utf-8"') 
+      self.send_header('Content-Type','text/xml; charset="utf-8"')
       self.send_header('Content-Length', contentLength)
       self.end_headers()
-      
+
       self.wfile.write(response)
       self.wfile.flush()
       self.handle_one_request()
-    
+
     # GetPhotoStatus allows the card to query if a photo has been uploaded
     # to the server yet
     if((self.path == "/api/soap/eyefilm/v1") and (SOAPAction == "\"urn:GetPhotoStatus\"")):
@@ -448,19 +458,19 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
       contentLength = len(response)
 
       eyeFiLogger.debug("GetPhotoStatus response: " + response)
-      
+
       self.send_response(200)
-      self.send_header('Date', self.date_time_string())      
+      self.send_header('Date', self.date_time_string())
       self.send_header('Pragma','no-cache')
       self.send_header('Server','Eye-Fi Agent/2.0.4.0 (Windows XP SP2)')
-      self.send_header('Content-Type','text/xml; charset="utf-8"') 
+      self.send_header('Content-Type','text/xml; charset="utf-8"')
       self.send_header('Content-Length', contentLength)
       self.end_headers()
-      
+
       self.wfile.write(response)
       self.wfile.flush()
 
-      
+
     # If the URL is upload and there is no SOAPAction the card is ready to send a picture to me  
     if((self.path == "/api/soap/eyefilm/v1/upload") and (SOAPAction == "")):
       eyeFiLogger.debug("Got upload request")      
@@ -470,35 +480,35 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
       eyeFiLogger.debug("Upload response: " + response)
 
       self.send_response(200)
-      self.send_header('Date', self.date_time_string())      
+      self.send_header('Date', self.date_time_string())
       self.send_header('Pragma','no-cache')
       self.send_header('Server','Eye-Fi Agent/2.0.4.0 (Windows XP SP2)')
-      self.send_header('Content-Type','text/xml; charset="utf-8"') 
+      self.send_header('Content-Type','text/xml; charset="utf-8"')
       self.send_header('Content-Length', contentLength)
       self.end_headers()
-      
+
       self.wfile.write(response)
       self.wfile.flush()
 
     # If the URL is upload and SOAPAction is MarkLastPhotoInRoll
     if((self.path == "/api/soap/eyefilm/v1") and (SOAPAction == "\"urn:MarkLastPhotoInRoll\"")):
-      eyeFiLogger.debug("Got MarkLastPhotoInRoll request")      
+      eyeFiLogger.debug("Got MarkLastPhotoInRoll request")
       response = self.markLastPhotoInRoll(postData)
       contentLength = len(response)
-      
+
       eyeFiLogger.debug("MarkLastPhotoInRoll response: " + response)
       self.send_response(200)
-      self.send_header('Date', self.date_time_string())      
+      self.send_header('Date', self.date_time_string())
       self.send_header('Pragma','no-cache')
       self.send_header('Server','Eye-Fi Agent/2.0.4.0 (Windows XP SP2)')
       self.send_header('Content-Type','text/xml; charset="utf-8"') 
       self.send_header('Content-Length', contentLength)
-      self.send_header('Connection', 'Close')      
+      self.send_header('Connection', 'Close')
       self.end_headers()
-      
+
       self.wfile.write(response)
       self.wfile.flush()
-      
+
       eyeFiLogger.debug("Connection closed.")
 
 
@@ -508,11 +518,11 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
     doc = xml.dom.minidom.Document()
 
     SOAPElement = doc.createElementNS("http://schemas.xmlsoap.org/soap/envelope/","SOAP-ENV:Envelope")
-    SOAPElement.setAttribute("xmlns:SOAP-ENV","http://schemas.xmlsoap.org/soap/envelope/")    
+    SOAPElement.setAttribute("xmlns:SOAP-ENV","http://schemas.xmlsoap.org/soap/envelope/")
     SOAPBodyElement = doc.createElement("SOAP-ENV:Body")
 
     markLastPhotoInRollResponseElement = doc.createElement("MarkLastPhotoInRollResponse")
-    
+
     SOAPBodyElement.appendChild(markLastPhotoInRollResponseElement)
     SOAPElement.appendChild(SOAPBodyElement)
     doc.appendChild(SOAPElement)
@@ -523,29 +533,29 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
   # Handles receiving the actual photograph from the card.
   # postData will most likely contain multipart binary post data that needs to be parsed 
   def uploadPhoto(self,postData):
-    
+
     # Take the postData string and work with it as if it were a file object
     postDataInMemoryFile = StringIO.StringIO(postData)
-    
+
     # Get the content-type header which looks something like this
-    # content-type: multipart/form-data; boundary=---------------------------02468ace13579bdfcafebabef00d    
+    # content-type: multipart/form-data; boundary=---------------------------02468ace13579bdfcafebabef00d
     contentTypeHeader = self.headers.getheaders('content-type').pop()
     eyeFiLogger.debug(contentTypeHeader)
-    
+
     # Extract the boundary parameter in the content-type header
     headerParameters = contentTypeHeader.split(";")
-    eyeFiLogger.debug(headerParameters)      
-    
+    eyeFiLogger.debug(headerParameters)
+
     boundary = headerParameters[1].split("=")
     boundary = boundary[1].strip()
-    eyeFiLogger.debug("Extracted boundary: " + boundary)          
-    
+    eyeFiLogger.debug("Extracted boundary: " + boundary)
+
     # eyeFiLogger.debug("uploadPhoto postData: " + postData)
-    
+
     # Parse the multipart/form-data
     form = cgi.parse_multipart(postDataInMemoryFile, {"boundary":boundary,"content-disposition":self.headers.getheaders('content-disposition')})
     eyeFiLogger.debug("Available multipart/form-data: " + str(form.keys()))
-    
+
     # Parse the SOAPENVELOPE using the EyeFiContentHandler()
     soapEnvelope = form['SOAPENVELOPE'][0]
     eyeFiLogger.debug("SOAPENVELOPE: " + soapEnvelope)
@@ -553,8 +563,8 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
     parser = xml.sax.parseString(soapEnvelope,handler)
 
     eyeFiLogger.debug("Extracted elements: " + str(handler.extractedElements))
-   
-    
+
+
     imageTarfileName = handler.extractedElements["filename"]
 
     #pike
@@ -565,13 +575,16 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
     eyeFiLogger.debug("Using uid/gid %d/%d"%(uid,gid))
     eyeFiLogger.debug("Using file_mode " + file_mode)
     eyeFiLogger.debug("Using dir_mode " + dir_mode)
-    
+
+    geotag_enable = int(self.server.config.getint('EyeFiServer','geotag_enable'))
+    geotag_accuracy = int(self.server.config.get('EyeFiServer','geotag_accuracy'))
+
     tempDir = os.path.dirname(self.server.config.get('EyeFiServer','upload_dir'))
 
-         
+
     imageTarPath = os.path.join(tempDir, imageTarfileName)
     eyeFiLogger.debug("Generated path " + imageTarPath)
-    
+
 
     fileHandle = open(imageTarPath, 'wb')
     eyeFiLogger.debug("Opened file " + imageTarPath + " for binary writing")
@@ -586,25 +599,44 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
     imageTarfile = tarfile.open(imageTarPath)
 
     for member in imageTarfile.getmembers():
-	#timezone = self.server.config.getint('EyeFiServer','timezone')
-	timezone = -7
-	imageDate = datetime.fromtimestamp(member.mtime) - timedelta(hours=timezone)
-	uploadDir = imageDate.strftime(self.server.config.get('EyeFiServer','upload_dir'))
-	eyeFiLogger.debug("Creating folder " + uploadDir)
-	if not os.path.isdir(uploadDir):
-	    os.makedirs(uploadDir)
-	    if uid != 0 and gid != 0:
-		 os.chown(uploadDir, uid, gid)
-	    if file_mode != "":
-		 os.chmod(uploadDir, string.atoi(dir_mode))
+        #timezone = self.server.config.getint('EyeFiServer','timezone')
+        timezone = -7
+        imageDate = datetime.fromtimestamp(member.mtime) - timedelta(hours=timezone)
+        uploadDir = imageDate.strftime(self.server.config.get('EyeFiServer','upload_dir'))
+        eyeFiLogger.debug("Creating folder " + uploadDir)
+        if not os.path.isdir(uploadDir):
+            os.makedirs(uploadDir)
+            if uid != 0 and gid != 0:
+                os.chown(uploadDir, uid, gid)
+            if file_mode != "":
+                os.chmod(uploadDir, string.atoi(dir_mode))
 
-	f=imageTarfile.extract(member, uploadDir)
-	imagePath = os.path.join(uploadDir, member.name)
-	eyeFiLogger.debug("imamgePath " + imagePath)
-	if uid != 0 and gid != 0:
-	  os.chown(imagePath, uid, gid)
-	if file_mode != "":
-	  os.chmod(imagePath, string.atoi(file_mode))
+        f=imageTarfile.extract(member, uploadDir)
+        imagePath = os.path.join(uploadDir, member.name)
+        eyeFiLogger.debug("imagePath " + imagePath)
+        if uid != 0 and gid != 0:
+            os.chown(imagePath, uid, gid)
+        if file_mode != "":
+            os.chmod(imagePath, string.atoi(file_mode))
+
+        if geotag_enable>0 and member.name.lower().endswith(".log"):
+            eyeFiLogger.debug("Processing LOG file " + imagePath)
+            try:
+              imageName = member.name[:-4]
+              shottime, aps = list(self.parselog(imagePath,imageName))
+              aps = self.getphotoaps(shottime, aps)
+              loc = self.getlocation(aps)
+              if loc['status']=='OK' and float(loc['accuracy'])<=geotag_accuracy:
+                  xmpName=imageName+".xmp"
+                  xmpPath=os.path.join(uploadDir, xmpName)
+                  eyeFiLogger.debug("Writing XMP file " + xmpPath)
+                  self.writexmp(xmpPath,float(loc['location']['lat']),float(loc['location']['lng']))
+                  if uid != 0 and gid != 0:
+                      os.chown(xmpPath, uid, gid)
+                  if file_mode != "":
+                      os.chmod(xmpPath, string.atoi(file_mode))
+            except:
+              eyeFiLogger.error("Error processing LOG file " + imagePath)
 
     eyeFiLogger.debug("Closing TAR file " + imageTarPath)
     imageTarfile.close()
@@ -612,7 +644,7 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
     eyeFiLogger.debug("Deleting TAR file " + imageTarPath)
     os.remove(imageTarPath)
 
- 
+
     try:
         import pyexiv2
 
@@ -635,21 +667,86 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
     SOAPElement = doc.createElementNS("http://schemas.xmlsoap.org/soap/envelope/","SOAP-ENV:Envelope")
     SOAPElement.setAttribute("xmlns:SOAP-ENV","http://schemas.xmlsoap.org/soap/envelope/")    
     SOAPBodyElement = doc.createElement("SOAP-ENV:Body")
-    
+
     uploadPhotoResponseElement = doc.createElement("UploadPhotoResponse")
     successElement = doc.createElement("success")
     successElementText = doc.createTextNode("true")
 
     successElement.appendChild(successElementText)
     uploadPhotoResponseElement.appendChild(successElement)
-    
+
     SOAPBodyElement.appendChild(uploadPhotoResponseElement)
     SOAPElement.appendChild(SOAPBodyElement)
     doc.appendChild(SOAPElement)
 
     return doc.toxml(encoding="UTF-8")
-  
-    
+
+  def parselog(self,logfile,filename):
+    shottime = 0
+    aps = {}
+    for line in open(logfile):
+        time, timestamp, act = line.strip().split(",", 2)
+        act = act.split(",")
+        act, args = act[0], act[1:]
+        if act in ("AP", "NEWAP"):
+            aps.setdefault(args[0], []).append({"time": int(time),"pwr": int(args[1])})
+        elif act == "NEWPHOTO":
+            if filename==args[0]:
+                shottime = int(time)
+        elif act == "POWERON":
+            if shottime>0:
+                return shottime, aps
+            shottime = 0
+            aps = {}
+        if shottime>0:
+            return shottime, aps
+
+  def getphotoaps(self, time, aps):
+    geotag_lag = int(self.server.config.get('EyeFiServer','geotag_lag'))
+    newaps = []
+    for mac in aps:
+        lag = min([(abs(ap["time"] - time), ap["pwr"]) for ap in aps[mac]], key=lambda a: a[0])
+        if lag[0] <= geotag_lag:
+            newaps.append({"mac": mac, "pwr": lag[1]})
+    return newaps
+
+  def getlocation(self, aps):
+    try:
+        geourl = 'maps.googleapis.com'
+        headers = {"Host": geourl}
+        params = "?browser=none&sensor=false"
+        for ap in aps:
+            params+='&wifi=mac:'+'-'.join([ap['mac'][2*d:2*d+2] for d in range(6)])+'|ss:'+str(int(math.log10(ap['pwr']/100.0)*10-50))
+        conn = httplib.HTTPSConnection(geourl)
+        conn.request("GET", "/maps/api/browserlocation/json"+params, "", headers)
+        resp = conn.getresponse()
+        result = resp.read()
+        conn.close()
+    except:
+        None
+    return simplejson.loads(result)
+
+  def writexmp(self,name,latitude,longitude):
+    if latitude>0:
+        ref="N"
+    else:
+        ref="S"
+    latitude=str(abs(latitude)).split('.')
+    latitude[1]=str(float('0.'+latitude[1])*60)
+    latitude=','.join(latitude)+ref
+
+    if longitude>0:
+        ref="E"
+    else:
+        ref="W"
+    longitude=str(abs(longitude)).split('.')
+    longitude[1]=str(float('0.'+longitude[1])*60)
+    longitude=','.join(longitude)+ref
+
+    FILE = open(name,"w")
+    FILE.write("<?xpacket begin='\xef\xbb\xbf' id='W5M0MpCehiHzreSzNTczkc9d'?>\n<x:xmpmeta xmlns:x='adobe:ns:meta/' x:xmptk='EyeFiServer'>\n<rdf:RDF xmlns:rdf='http://www.w3.org/1999/02/22-rdf-syntax-ns#'>\n<rdf:Description rdf:about='' xmlns:exif='http://ns.adobe.com/exif/1.0/'>\n<exif:GPSLatitude>"+latitude+"</exif:GPSLatitude>\n<exif:GPSLongitude>"+longitude+"</exif:GPSLongitude>\n<exif:GPSVersionID>2.2.0.0</exif:GPSVersionID>\n</rdf:Description>\n</rdf:RDF>\n</x:xmpmeta>\n<?xpacket end='w'?>\n")
+    FILE.close()
+
   def getPhotoStatus(self,postData):
     handler = EyeFiContentHandler()
     parser = xml.sax.parseString(postData,handler)
@@ -660,28 +757,28 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
     SOAPElement = doc.createElementNS("http://schemas.xmlsoap.org/soap/envelope/","SOAP-ENV:Envelope")
     SOAPElement.setAttribute("xmlns:SOAP-ENV","http://schemas.xmlsoap.org/soap/envelope/")    
     SOAPBodyElement = doc.createElement("SOAP-ENV:Body")
-    
+
     getPhotoStatusResponseElement = doc.createElement("GetPhotoStatusResponse")
     getPhotoStatusResponseElement.setAttribute("xmlns","http://localhost/api/soap/eyefilm")
 
     fileidElement = doc.createElement("fileid")
     fileidElementText = doc.createTextNode("1")
     fileidElement.appendChild(fileidElementText)
-    
+
     offsetElement = doc.createElement("offset")
     offsetElementText = doc.createTextNode("0")
     offsetElement.appendChild(offsetElementText)
-    
+
     getPhotoStatusResponseElement.appendChild(fileidElement)
     getPhotoStatusResponseElement.appendChild(offsetElement)
-    
+
     SOAPBodyElement.appendChild(getPhotoStatusResponseElement)
-    
+
     SOAPElement.appendChild(SOAPBodyElement)
     doc.appendChild(SOAPElement)
 
     return doc.toxml(encoding="UTF-8")
-    
+
   def _get_mac_uploadkey_dict(self):
     macs = {}
     upload_keys = {}
@@ -717,21 +814,21 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
     # Return the binary data represented by the hexadecimal string
     # resulting in something that looks like "\x00\x18V\x03\x04..."
     binaryCredentialString = binascii.unhexlify(credentialString)
-    
-    # Now MD5 hash the binary string    
+
+    # Now MD5 hash the binary string
     m = hashlib.md5()
     m.update(binaryCredentialString)
-    
+
     # Hex encode the hash to obtain the final credential string
     credential = m.hexdigest()
 
     # Create the XML document to send back
     doc = xml.dom.minidom.Document()
-    
+
     SOAPElement = doc.createElementNS("http://schemas.xmlsoap.org/soap/envelope/","SOAP-ENV:Envelope")
     SOAPElement.setAttribute("xmlns:SOAP-ENV","http://schemas.xmlsoap.org/soap/envelope/")    
     SOAPBodyElement = doc.createElement("SOAP-ENV:Body")
-    
+
 
     startSessionResponseElement = doc.createElement("StartSessionResponse")
     startSessionResponseElement.setAttribute("xmlns","http://localhost/api/soap/eyefilm")
@@ -739,11 +836,11 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
     credentialElement = doc.createElement("credential")
     credentialElementText = doc.createTextNode(credential)
     credentialElement.appendChild(credentialElementText)
-    
+
     snonceElement = doc.createElement("snonce")
     snonceElementText = doc.createTextNode("99208c155fc1883579cf0812ec0fe6d2")
     snonceElement.appendChild(snonceElementText)
-    
+
     transfermodeElement = doc.createElement("transfermode")
     transfermodeElementText = doc.createTextNode("2")
     transfermodeElement.appendChild(transfermodeElementText)
@@ -764,7 +861,7 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
     startSessionResponseElement.appendChild(upsyncallowedElement)
 
     SOAPBodyElement.appendChild(startSessionResponseElement)
-    
+
     SOAPElement.appendChild(SOAPBodyElement)
     doc.appendChild(SOAPElement)
 
@@ -785,6 +882,8 @@ def stopEyeFi():
     conn.request("QUIT", "/")
     conn.getresponse()
 
+eyeFiServer=''
+
 def runEyeFi():
 
   configfile = sys.argv[2]
@@ -792,61 +891,52 @@ def runEyeFi():
 
   config = ConfigParser.SafeConfigParser()
   config.read(configfile)
-  
+
   # open file logging
   logfile = sys.argv[3]
   fileHandler = logging.handlers.TimedRotatingFileHandler(logfile, "D", 7, backupCount=7, encoding=None)
   fileHandler.setFormatter(eyeFiLoggingFormat)
   eyeFiLogger.addHandler(fileHandler)
 
-  
+
   server_address = (config.get('EyeFiServer','host_name'), config.getint('EyeFiServer','host_port'))
-  
+
   # run webserver as www-data - cant get it working
   #if config.get('EyeFiServer','user_id')!='':
   #  os.setuid(config.getint('EyeFiServer','user_id'))
-    
+
   try:
     # Create an instance of an HTTP server. Requests will be handled
     # by the class EyeFiRequestHandler
     eyeFiServer = EyeFiServer(server_address, EyeFiRequestHandler)
     eyeFiServer.config = config
-    
+
     # Spawn a new thread for the server    
     # thread.start_new_thread(eyeFiServer.serve, ())
     # eyeFiLogger.info("Eye-Fi server started listening on port " + str(server_address[1]))
 
     eyeFiLogger.info("Eye-Fi server started listening on port " + str(server_address[1]))
     eyeFiServer.serve_forever() 
-         
-    #raw_input("\nPress <RETURN> to stop server\n")    
+
+    #raw_input("\nPress <RETURN> to stop server\n")
     #eyeFiServer.stop()
     #eyeFiLogger.info("Eye-Fi server stopped")
     #eyeFiServer.socket.close()
-    
+
   except KeyboardInterrupt:
     #eyeFiServer.socket.close()
     pass
-    
-    
+
+
 
   #eyeFiLogger.info("Eye-Fi server stopped")
 
-def reloadEyeFi(signum, frame):
-    configfile = sys.argv[2]
-    eyeFiLogger.info("Reading config " + configfile)
-
-    config = ConfigParser.SafeConfigParser()
-    config.read(configfile)
-  
-    
 class MyDaemon(Daemon):
   def run(self):
     runEyeFi()
 
 def main():
   pid_file = '/tmp/eyefiserver.pid'
-  signal.signal(signal.SIGUSR1, reloadEyeFi)
   result = 0
   if len(sys.argv) > 2:
     if 'start' == sys.argv[1]:

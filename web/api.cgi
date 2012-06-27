@@ -32,16 +32,13 @@ case "$ACT" in
 			CONFIG=`$READLINK "$CONFIG"`
 		done
 		if [ -w ${CONFIG} ]; then
-			host_name_old=$(getval host_name)
-			host_port_old=$(getval host_port)
-			host_name_new=$(getparam host_name)
-			host_port_new=$(getparam host_port)
-			save host_name
-			save host_port
 			save mac_0
 			save upload_key_0
 			save mac_1
 			save upload_key_1
+			save geotag_enable
+			save geotag_lag
+			save geotag_accuracy
 			save upload_dir
 			save upload_uid
 			save upload_gid
@@ -52,18 +49,10 @@ case "$ACT" in
 			if [ -z ${SUDO} ]; then
 				$ECHO "Service NOT restarted: sudo not found."
 			else
-				if [ "$host_name_new" == "$host_name_old" ] && [ "$host_port_new" == "$host_port_old" ]; then
-					if $SUDO -u \#0 $DAEMON reload 2>&1 ; then
-						$ECHO "Configuration saved and applied to service."
-					else
-						$ECHO "Configuration saved."
-					fi
+				if $SUDO -u \#0 $DAEMON reload 2>&1 ; then
+					$ECHO "Configuration applied."
 				else
-					if $SUDO -u \#0 $DAEMON restart 2>&1 ; then
-						$ECHO "Configuration saved and service restarted."
-					else
-						$ECHO "Configuration saved."
-					fi
+					$ECHO "Configuration saved."
 				fi
 			fi
 		else

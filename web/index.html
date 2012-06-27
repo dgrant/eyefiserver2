@@ -32,8 +32,8 @@
 </div> 
 	<div id="introtabs">
 		<div id='Cards' class="selectedSettingsTab" onclick="activate('Cards');">Cards</div>
-		<div id='Host' class="unselectedSettingsTab" onclick="activate('Host');">Host</a></div>
 		<div id='Upload' class="unselectedSettingsTab" onclick="activate('Upload');">Upload</div>
+		<div id='Geotagging' class="unselectedSettingsTab" onclick="activate('Geotagging');">Geotagging</a></div>
 		<div id='Log' class="unselectedSettingsTab" onclick="activate('Log');">Log</a></div>
 		</div>
 	</div>
@@ -41,7 +41,7 @@
 <div class="settingsContainer">
 	<div id="back">
 	</div>
-	<div class="dialogBlurb"><img src="images/dimicon-networks.jpg" /></div>
+	<div class="dialogBlurb"><img id="icon" src="images/dimicon-networks.jpg" /></div>
 	<div class="settingsContent">
 
 		<h1 id="settingsTitle" class="settingsTitle">Cards</h1>
@@ -49,8 +49,8 @@
 		<fieldset class="bordered">
 			<legend class="bordered">Eye-Fi Card 1</legend>
 			<h3 class="boldGreyContent">
-				MAC address <input id="mac_0" style="width: 100px;" />
-				Upload key <input id="upload_key_0" style="width:250px; margin-top: 10px;"/>
+				MAC address <input id="mac_0" maxlength="12" style="width: 100px;" />
+				Upload key <input id="upload_key_0" maxlength="32" style="width:250px; margin-top: 10px;"/>
 			</h3>
 			<h3 class="greyContent">
 				You can find these values after configuring the card. It is inside C:\Documents and Settings\&lt;User&gt;\Application Data\Eye-Fi\Settings.xml on Windows or ~/Applications Data/Eye-Fi/Settings.xml on Mac search for it and paste it here.
@@ -59,37 +59,47 @@
 		<fieldset id="card2" class="bordered">
 			<legend class="bordered">Eye-Fi Card 2</legend>
 			<h3 class="boldGreyContent">
-				MAC address <input id="mac_1" style="width:100px;"/>
-				Upload key <input id="upload_key_1" style="width:250px;"/>
+				MAC address <input id="mac_1" maxlength="12" style="width:100px;"/>
+				Upload key <input id="upload_key_1" maxlength="32" style="width:250px;"/>
 			</h3>
 			<h3 class="greyContent">
 				Additional Eye-Fi card configuration, same as above.
 			</h3>
 		</fieldset>
 		</div>
-		
-		<div id="host" style='display:none;'>
+
+		<div id="geotagging" style='display:none;'>
 		<fieldset class="bordered">
-			<legend class="bordered">Name</legend>
+			<legend class="bordered">Manage</legend>
 			<h3 class="boldGreyContent">
-				<input id="host_name" style="width: 150px;"/><br>
+				<input id="geotag_enable" type="checkbox"> Enable Geotagging
 			</h3>
 			<h3 class="greyContent">
-				You can leave hostname empty for localhost
+				Create XMP file with geolocation information based on access points detected by Eye-Fi card for any uploaded JPEG or RAW file
 			</h3>
 		</fieldset>
 
 		<fieldset class="bordered">
-			<legend class="bordered">Port</legend>
+			<legend class="bordered">Time lag</legend>
 			<h3 class="boldGreyContent">
-				<input id="host_port" style="width:50px;"/><br>
+				<input id="geotag_lag" style="width:50px;"/><br>
 			</h3>
 			<h3 class="greyContent">
-				Port to listen on
+				Use acces points detected within this period of time before or after photo was taken, in seconds
+			</h3>
+		</fieldset>
+
+		<fieldset class="bordered">
+			<legend class="bordered">Distance</legend>
+			<h3 class="boldGreyContent">
+				<input id="geotag_accuracy" style="width:50px;"/><br>
+			</h3>
+			<h3 class="greyContent">
+				Use acquired geolocation data with accuracy over this value, in meters. Too big values such as default 140000 will result of adding a geolocation data of a server even if there was no suitable access points for a photo.
 			</h3>
 		</fieldset>
 		</div>
-
+		
 		<div id="upload" style='display:none;'>
 		<fieldset class="bordered">
 			<legend class="bordered">Directory</legend>
