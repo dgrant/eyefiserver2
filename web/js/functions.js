@@ -23,9 +23,9 @@ function refreshfields()
 	refreshcheckbox('geotag_enable');
 	refreshfield('geotag_lag');
 	refreshfield('geotag_accuracy');
-	refreshfield('mac_0');
+	refreshmacfield('mac_0');
 	refreshfield('upload_key_0');
-	refreshfield('mac_1');
+	refreshmacfield('mac_1');
 	refreshfield('upload_key_1');
 	refreshfield('upload_dir');
 	refreshselect('upload_uid');
@@ -37,6 +37,12 @@ function refreshfield(field)
 {
 	$.get("api.cgi?act=getval&name="+field, function(data){
 		$("#" + field).val(data);
+	});
+}
+function refreshmacfield(field)
+{
+	$.get("api.cgi?act=getval&name="+field, function(data){
+		$("#" + field).val(data.replace(new RegExp("[0-9A-F]{2}",'gi'),"$&:").substring(0,17));
 	});
 }
 function refreshcheckbox(field)
@@ -73,7 +79,7 @@ function getcheckboxes(field)
 }
 function apply()
 {
-	$.get("api.cgi?act=save&mac_0="+$('#mac_0').val() + "&upload_key_0="+$('#upload_key_0').val()+"&mac_1="+$('#mac_1').val()+"&upload_key_1="+$('#upload_key_1').val()+"&upload_dir="+escape($('#upload_dir').val())+"&upload_uid="+$('#upload_uid').val()+"&upload_gid="+$('#upload_gid').val()+"&upload_file_mode="+getcheckboxes('upload_file_mode')+"&upload_dir_mode="+getcheckboxes('upload_dir_mode')+"&geotag_enable="+($('#geotag_enable').attr('checked')?"1":"0")+"&geotag_lag="+$('#geotag_lag').val()+"&geotag_accuracy="+$('#geotag_accuracy').val(), function(data){
+	$.get("api.cgi?act=save&mac_0="+$('#mac_0').val().replace(new RegExp("[^0-9A-F]",'gi'),"")+"&upload_key_0="+$('#upload_key_0').val()+"&mac_1="+$('#mac_1').val().replace(new RegExp("[^0-9A-F]",'gi'),"")+"&upload_key_1="+$('#upload_key_1').val()+"&upload_dir="+escape($('#upload_dir').val())+"&upload_uid="+$('#upload_uid').val()+"&upload_gid="+$('#upload_gid').val()+"&upload_file_mode="+getcheckboxes('upload_file_mode')+"&upload_dir_mode="+getcheckboxes('upload_dir_mode')+"&geotag_enable="+($('#geotag_enable').attr('checked')?"1":"0")+"&geotag_lag="+$('#geotag_lag').val()+"&geotag_accuracy="+$('#geotag_accuracy').val(), function(data){
 		alert(data);
 	});
 	return false;
