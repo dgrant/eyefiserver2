@@ -1,12 +1,15 @@
 #!/bin/sh
 NAME=eyefiserver
 CONFIG=/etc/$NAME.conf
+TMPCONFIG=/tmp/$NAME.conf
 DAEMON=/etc/init.d/$NAME
 LOG=/var/log/$NAME.log
 GREP=/bin/grep
 ECHO=/bin/echo
 CAT=/bin/cat
 SED=/bin/sed
+CP=/bin/cp
+RM=/bin/rm
 READLINK=/usr/bin/readlink
 SUDOUSR=/opt/bin/sudo
 SUDOOPT=/usr/bin/sudo
@@ -17,7 +20,7 @@ function getval {
 	$GREP $1: "$CONFIG" | $SED -r "s/^\s*$1\s*[:=]\s*(.*)\s*$/\1/"
 }
 function save {
-	$SED -i -r "s|^\s*$1\s*[:=].*$|$1:$(getparam $1)|" "$CONFIG"
+	$SED -i -r "s|^\s*$1\s*[:=].*$|$1:$(getparam $1)|" "$TMPCONFIG"
 }
 echo Content-Type: text/plain
 echo ""
@@ -32,6 +35,7 @@ case "$ACT" in
 			CONFIG=`$READLINK "$CONFIG"`
 		done
 		if [ -w ${CONFIG} ]; then
+			$CP -f $CONFIG $TMPCONFIG
 			save mac_0
 			save upload_key_0
 			save mac_1
@@ -44,6 +48,8 @@ case "$ACT" in
 			save upload_gid
 			save upload_file_mode
 			save upload_dir_mode
+			$CP -f $TMPCONFIG $CONFIG
+			$RM -f $TMPCONFIG
 			[ -x $SUDOUSR ] && SUDO=$SUDOUSR
 			[ -x $SUDOOPT ] && SUDO=$SUDOOPT
 			if [ -z ${SUDO} ]; then

@@ -144,7 +144,6 @@ $CMD_SED -i /${NAME}/d ${SYS_QPKG_INSTALL_PATH}/Optware/etc/sudoers
 #}
 #
 pkg_post_install(){
-$CMD_CHMOD 777 ${SYS_QPKG_DIR}
 $CMD_CHMOD 666 ${SYS_QPKG_DIR}/${NAME}.conf
 $CMD_CHMOD 555 ${SYS_QPKG_DIR}/web/api.cgi
 [ -d ${SYS_WEB_PATH}/${NAME} ] || $CMD_LN -s ${SYS_QPKG_DIR}/web ${SYS_WEB_PATH}/${NAME}
