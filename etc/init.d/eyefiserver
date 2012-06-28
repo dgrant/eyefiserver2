@@ -4,13 +4,14 @@ QPKG_CONF=/etc/config/qpkg.conf
 DAEMON=/usr/local/bin/$NAME.py
 CONF=/etc/$NAME.conf
 LOG=/var/log/$NAME.log
+OPTPYTHON=/opt/bin/python
 if [ -f $QPKG_CONF ]; then
 	QPKG_NAME="EyeFiServer"
 	QPKG_DIR=$(/sbin/getcfg $QPKG_NAME Install_Path -d "" -f $QPKG_CONF)
 	ENABLED=$(/sbin/getcfg $QPKG_NAME Enable -u -d FALSE -f $QPKG_CONF)
 	[ -a $DAEMON ] || ln -s $QPKG_DIR/$NAME.py $DAEMON
 	[ -a $CONF ] || ln -s /etc/config/$NAME.conf $CONF
-	DAEMON="/opt/bin/python $DAEMON"
+	[ -x $OPTPYTHON ] && DAEMON="$OPTPYTHON $DAEMON"
 else
 	ENABLED="TRUE"
 fi

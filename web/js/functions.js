@@ -55,7 +55,7 @@ function refreshcheckboxes(field)
 {
 	$.get("api.cgi?act=getval&name="+field, function(data){
 		for(i=8; i>=0; i--){
-			$("#" + field+'_'+i).attr('checked', data&1!=0);
+			$("#" + field+'_'+i).attr('checked', (data&1)!=0);
 			data>>=1;
 		}
 	});
@@ -91,7 +91,7 @@ function fillselect(field){
 			cell=rows[row].split(':');
 			if(cell!=""){
 				a.options.add(new Option(cell[0],cell[1]));
-				a.options[a.options.length-1].setAttribute('id',field.id+'_'+cell[1]);
+				a.options[a.options.length-1].setAttribute('id',field+'_'+cell[1]);
 			}
 		}
 	});

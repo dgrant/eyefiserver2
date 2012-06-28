@@ -309,6 +309,10 @@ a.editButton {
 	color: #000;
 }
 
+a.editButton:hover {
+	cursor: pointer;
+}
+
 input[type=button].editButton {
 	width: 100%;
 	margin-bottom: 5px;
@@ -413,6 +417,11 @@ select.settingsTab {
 }
 
 div.subtoolbar{background:url(../images/google_background.png) repeat right center !important; color:#CCC; height:43px;}
+
+div.ButtonsSection {
+	margin-top: 10px;
+	text-align: right;
+}
 
 div.gradientToolbar {
 	background: -webkit-gradient(linear, left top, left bottom, from(#5a5a5a), color-stop(0.025, #fec369), color-stop(0.05, #ffaa2b), color-stop(0.49, #ff9c08), color-stop(0.51, #ef8200), color-stop(0.95, #f98f00), color-stop(0.975, #fcab34), to(#202020));

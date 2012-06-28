@@ -42,7 +42,6 @@
 	<div id="back">
 	</div>
 	<div class="settingsContent">
-
 		
 		<article id="CardsSection">
 		<h1 class="settingsTitle">Cards</h1>
@@ -67,8 +66,8 @@
 			</div>
 		</fieldset>
 		<div class="ButtonsSection">
-			<input type="button" style="margin-top: 10px;" value="Apply" onclick="apply();" />
-			<input type="button" style="margin-top: 10px;" value="Revert" onclick="revert();" />
+			<a id="apply" class="editButton" onclick="apply();">Apply</a>
+			<a id="revert" class="editButton" onclick="revert();">Revert</a>
 		</div>
 		</article>
 
@@ -87,7 +86,7 @@
 		<fieldset class="bordered">
 			<legend class="bordered">Time lag</legend>
 			<div class="boldGreyContent">
-				<input id="geotag_lag" style="width:50px;"/><br>
+				<input id="geotag_lag" style="width:50px;"/>
 			</div>
 			<div class="greyContent">
 				Use acces points detected within this period of time before or after photo was taken, in seconds
@@ -96,15 +95,16 @@
 
 		<fieldset class="bordered">
 			<legend class="bordered">Distance</legend>
-			<h3 class="boldGreyContent">
-				<input id="geotag_accuracy" style="width:50px;"/><br>
-			</h3>
-			<h3 class="greyContent">
+			<div class="boldGreyContent">
+				<input id="geotag_accuracy" style="width:50px;"/>
+			</div>
+			<div class="greyContent">
 				Use acquired geolocation data with accuracy over this value, in meters. Too big values such as default 140000 will result of adding a geolocation data of a server even if there was no suitable access points for a photo.
+			</div>
 		</fieldset>
 		<div class="ButtonsSection">
-			<input type="button" style="margin-top: 10px;" value="Apply" onclick="apply();" />
-			<input type="button" style="margin-top: 10px;" value="Revert" onclick="revert();" />
+			<a id="apply" class="editButton" onclick="apply();">Apply</a>
+			<a id="revert" class="editButton" onclick="revert();">Revert</a>
 		</div>
 		</article>
 		
@@ -149,22 +149,17 @@
 			</div>
 		</fieldset>
 		<div class="ButtonsSection">
-			<input type="button" style="margin-top: 10px;" value="Apply" onclick="apply();" />
-			<input type="button" style="margin-top: 10px;" value="Revert" onclick="revert();" />
+		<a id="apply" class="editButton" onclick="apply();">Apply</a>
+		<a id="revert" class="editButton" onclick="revert();">Revert</a>
 		</div>
 		</article>
 
 		<article id="LogSection" style='display:none;'>
 		<h1 class="settingsTitle">Log</h1>
-		<fieldset class="bordered">
-			<legend class="bordered">Log</legend>
-			<div class="boldGreyContent">
-				<textarea id="logtext" style="width: 100%; height: 300px;" readonly></textarea>
-			</div>
-			<div class="greyContent">
-			</div>
-			<input type="button" value="Refresh" onclick="refreshlog();" />
-		</fieldset>
+		<textarea id="logtext" style="width: 100%; height: 300px; margin-top: 16px;" readonly></textarea>
+		<div class="ButtonsSection">
+			<a class="editButton" onclick="refreshlog();">Refresh</a>
+		</div>
 		</article>
 
 	</div>
