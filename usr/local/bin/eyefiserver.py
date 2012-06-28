@@ -599,8 +599,8 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
     imageTarfile = tarfile.open(imageTarPath)
 
     for member in imageTarfile.getmembers():
-        timezone = time.timezone if (time.daylight == 0) else time.altzone
-        timezone = timezone / 60 / 60 * -1
+        timeoffset = time.timezone if (time.daylight == 0) else time.altzone
+        timezone = timeoffset / 60 / 60 * -1
         imageDate = datetime.fromtimestamp(member.mtime) - timedelta(hours=timezone)
         uploadDir = imageDate.strftime(self.server.config.get('EyeFiServer','upload_dir'))
         eyeFiLogger.debug("Creating folder " + uploadDir)
@@ -614,6 +614,7 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
         f=imageTarfile.extract(member, uploadDir)
         imagePath = os.path.join(uploadDir, member.name)
         eyeFiLogger.debug("imagePath " + imagePath)
+        os.utime(imagePath, (member.mtime + timeoffset, member.mtime + timeoffset))
         if uid != 0 and gid != 0:
             os.chown(imagePath, uid, gid)
         if file_mode != "":
@@ -643,23 +644,6 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
 
     eyeFiLogger.debug("Deleting TAR file " + imageTarPath)
     os.remove(imageTarPath)
-
-
-    try:
-        import pyexiv2
-
-        metadata = pyexiv2.ImageMetadata(imagePath)
-        metadata.read()
-        if 'Exif.Image.DateTime' in metadata.exif_keys:
-            d = metadata['Exif.Image.DateTime'].value
-            seconds = time.mktime(d.timetuple())
-            os.utime(imagePath, (seconds, seconds))
-        else:
-            eyeFiLogger.error("Could not find Exif.Image.DateTime field in EXIF information")
-    except ImportError, e:
-        eyeFiLogger.error("pyexiv2 module not present. Could not read EXIF information.")
-        if e.message != 'No module named pyexiv2':
-            raise
 
     # Create the XML document to send back
     doc = xml.dom.minidom.Document()
