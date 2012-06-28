@@ -11,13 +11,13 @@ READLINK=/usr/bin/readlink
 SUDOUSR=/opt/bin/sudo
 SUDOOPT=/usr/bin/sudo
 function getparam {
-	$ECHO "$QUERY_STRING" | $SED -r "s|^.*$1=([^&]*).*$|\1|" | $SED "s/%20/ /g" | $SED "s/%3C/</g" | $SED "s/%3E/>/g"
+	$ECHO "$QUERY_STRING" | $SED -r "s|^.*$1=([^&]*).*$|\1|" | $SED "s/%20/ /g" | $SED "s/%3C/</g" | $SED "s/%3E/>/g" | $SED "s/%25/%/g"
 }
 function getval {
 	$GREP $1: "$CONFIG" | $SED -r "s/^\s*$1\s*[:=]\s*(.*)\s*$/\1/"
 }
 function save {
-	$SED -i -r "s/^\s*$1\s*[:=].*$/$1:$(getparam $1)/" "$CONFIG"
+	$SED -i -r "s|^\s*$1\s*[:=].*$|$1:$(getparam $1)|" "$CONFIG"
 }
 echo Content-Type: text/plain
 echo ""
