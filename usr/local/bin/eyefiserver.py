@@ -599,8 +599,8 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
     imageTarfile = tarfile.open(imageTarPath)
 
     for member in imageTarfile.getmembers():
-        #timezone = self.server.config.getint('EyeFiServer','timezone')
-        timezone = -7
+        timezone = time.timezone if (time.daylight == 0) else time.altzone
+        timezone = timezone / 60 / 60 * -1
         imageDate = datetime.fromtimestamp(member.mtime) - timedelta(hours=timezone)
         uploadDir = imageDate.strftime(self.server.config.get('EyeFiServer','upload_dir'))
         eyeFiLogger.debug("Creating folder " + uploadDir)
