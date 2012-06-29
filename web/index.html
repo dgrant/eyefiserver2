@@ -34,7 +34,7 @@
 		<div id='Cards'>Cards</div>
 		<div id='Upload'>Upload</div>
 		<div id='Geotagging'>Geotagging</div>
-		<div id='Log'>Log</div>
+		<div id='Manage'>Manage</div>
 		</div>
 	</div>
 
@@ -154,11 +154,25 @@
 		</div>
 		</article>
 
-		<article id="LogSection" style='display:none;'>
-		<h1 class="settingsTitle">Log</h1>
-		<textarea id="logtext" style="width: 100%; height: 300px; margin-top: 16px;" readonly></textarea>
+		<article id="ManageSection" style='display:none;'>
+		<h1 class="settingsTitle">Manage</h1>
+		<fieldset class="bordered">
+			<legend class="bordered">Status</legend>
+			<div id="status" class="boldGreyContent">
+				Unknown
+			</div>
+		</fieldset>
+		<fieldset class="bordered">
+			<legend class="bordered">Log</legend>
+			<div class="boldGreyContent">
+				<textarea id="logtext" style="width: 100%; height: 250px;" readonly></textarea>
+			</div>
+		</fieldset>
 		<div class="ButtonsSection">
-			<a class="editButton" onclick="refreshlog();">Refresh</a>
+			<a class="editButton" onclick="daemon('start');">Start</a>
+			<a class="editButton" onclick="daemon('stop');">Stop</a>
+			<a class="editButton" onclick="daemon('restart');">Restart</a>
+			<a class="editButton" onclick="refresh();">Refresh</a>
 		</div>
 		</article>
 

@@ -81,7 +81,8 @@ class Daemon:
                     pid = os.fork()
                     if pid > 0:
                             # exit first parent
-                            sys.exit(0)
+#                            sys.exit(0)
+                            return 0
             except OSError, e:
                     sys.stderr.write("fork #1 failed: %d (%s)\n" % (e.errno, e.strerror))
                     sys.exit(1)
@@ -96,7 +97,8 @@ class Daemon:
                     pid = os.fork()
                     if pid > 0:
                             # exit from second parent
-                            sys.exit(0)
+#                            sys.exit(0)
+                            return 1
             except OSError, e:
                     sys.stderr.write("fork #2 failed: %d (%s)\n" % (e.errno, e.strerror))
                     sys.exit(1)
@@ -134,11 +136,13 @@ class Daemon:
             if pid:
                     message = "pidfile %s already exist. Daemon already running?\n"
                     sys.stderr.write(message % self.pidfile)
-                    sys.exit(1)
+                    return 1
 
             # Start the daemon
-            self.daemonize()
-            self.run()
+            forkresult = self.daemonize()
+            if forkresult==None:
+                self.run()
+            return forkresult
 
     def stop(self):
             """
@@ -155,7 +159,7 @@ class Daemon:
             if not pid:
                     message = "pidfile %s does not exist. Daemon not running?\n"
                     sys.stderr.write(message % self.pidfile)
-                    return # not an error in a restart
+                    return 1
 
             # Try killing the daemon process
             try:
@@ -175,8 +179,34 @@ class Daemon:
             """
             Restart the daemon
             """
-            self.stop()
-            self.start()
+            # Get the pid from the pidfile
+            try:
+                    pf = file(self.pidfile,'r')
+                    pid = int(pf.read().strip())
+                    pf.close()
+            except IOError:
+                    pid = None
+
+            if pid:
+            # Try killing the daemon process
+                try:
+                    while 1:
+                            os.kill(pid, SIGTERM)
+                            time.sleep(0.1)
+                except OSError, err:
+                    err = str(err)
+                    if err.find("No such process") > 0:
+                            if os.path.exists(self.pidfile):
+                                    os.remove(self.pidfile)
+                    else:
+                            print str(err)
+                            return 1
+
+            # Start the daemon
+            forkresult = self.daemonize()
+            if forkresult==None:
+                self.run()
+            return forkresult
 
     def reload(self):
             """
@@ -201,6 +231,23 @@ class Daemon:
             except OSError, err:
                     print str(err)
 
+    def status(self):
+            """
+            Check daemon status
+            """
+            # Get the pid from the pidfile
+            try:
+                    pf = file(self.pidfile,'r')
+                    pid = int(pf.read().strip())
+                    pf.close()
+            except IOError:
+                    pid = None
+
+            if not pid:
+                    message = "pidfile %s does not exist. Daemon not running?\n"
+                    sys.stderr.write(message % self.pidfile)
+                    return 1
+
     def run(self):
             """
             You should override this method when you subclass Daemon. It will be called after the process has been
@@ -223,8 +270,6 @@ URLs.
 
 
 """
-
-
 
 
 # Create the main logger
@@ -257,6 +302,7 @@ class EyeFiContentHandler(ContentHandler):
 
 
   def __init__(self):
+
     self.extractedElements = {}
 
     for elementName in self.elementNamesToExtract:
@@ -294,11 +340,20 @@ class EyeFiServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
     except:
         eyeFiLogger.error("Error reloading configuration")
 
+  def stop_server(self, signum, frame):
+    try:
+        eyeFiLogger.info("Eye-Fi server stopped ")
+        self.stop()
+    except:
+        eyeFiLogger.error("Error stopping server")
+
   def server_bind(self):
 
     BaseHTTPServer.HTTPServer.server_bind(self)
     self.socket.settimeout(None)
     signal.signal(signal.SIGUSR1, self.reload_config)
+    signal.signal(signal.SIGTERM, self.stop_server)
+    signal.signal(signal.SIGINT, self.stop_server)
     self.run = True
 
   def get_request(self):
@@ -900,7 +955,7 @@ def runEyeFi():
     # eyeFiLogger.info("Eye-Fi server started listening on port " + str(server_address[1]))
 
     eyeFiLogger.info("Eye-Fi server started listening on port " + str(server_address[1]))
-    eyeFiServer.serve_forever() 
+    eyeFiServer.serve_forever()
 
     #raw_input("\nPress <RETURN> to stop server\n")
     #eyeFiServer.stop()
@@ -926,15 +981,28 @@ def main():
     if 'start' == sys.argv[1]:
       daemon = MyDaemon(pid_file)
       result = daemon.start()
+      if result!=1:
+        print "EyeFiServer started"
     elif 'stop' == sys.argv[1]:
       daemon = MyDaemon(pid_file)
       result = daemon.stop()
+      if result!=1:
+        print "EyeFiServer stopped"
     elif 'restart' == sys.argv[1]:
       daemon = MyDaemon(pid_file)
       result = daemon.restart()
+      if result!=1:
+        print "EyeFiServer restarted"
     elif 'reload' == sys.argv[1]:
       daemon = MyDaemon(pid_file)
       result = daemon.reload()
+    elif 'status' == sys.argv[1]:
+      daemon = MyDaemon(pid_file)
+      result = daemon.status()
+      if result==1:
+        print "EyeFiServer is not running"
+      else:
+        print "EyeFiServer is running"
     elif 'instance' == sys.argv[1]:
       runEyeFi()
     else:
@@ -942,7 +1010,7 @@ def main():
       sys.exit(2)
     sys.exit(result)
   else:
-    print "usage: %s start|stop|restart|reload|instance conf_file log_file" % sys.argv[0]
+    print "usage: %s start|stop|restart|reload|status|instance conf_file log_file" % sys.argv[0]
     sys.exit(2)
 
 if __name__ == "__main__":

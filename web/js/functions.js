@@ -6,17 +6,26 @@ function selectTab()
 	var currentSection = $("#" + currentTab.attr('id') + "Section");
 	$('.settingsContent > article').not(currentSection).hide();
 	currentSection.show();
-	if (currentTab.is("#Log")) { refreshlog() };
+	if (currentTab.is("#Manage")) {refresh()};
 }
-
-function refreshlog()
+function refresh()
 {
+	$.get("api.cgi?act=status", function(data){
+		a=document.getElementById('status');
+		a.innerHTML=data;
+	});
 	$.get("api.cgi?act=getlog", function(data){
 		a=document.getElementById('logtext');
 		a.innerHTML=data;
 		a.scrollTop=a.scrollHeight;
 	});
-	return false;
+}
+function daemon(actname)
+{
+	$.get("api.cgi?act="+actname, function(data){
+		alert(data);
+	});
+	setTimeout(refresh,500);
 }
 function refreshfields()
 {

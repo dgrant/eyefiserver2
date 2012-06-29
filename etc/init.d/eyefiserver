@@ -16,11 +16,8 @@ else
 	ENABLED="TRUE"
 fi
 case "$1" in
-start)
-	[ "$ENABLED" == "FALSE" ] && echo "$QPKG_NAME is disabled." && exit 1
-	$DAEMON start $CONF $LOG
-	;;
-stop|restart|reload|instance)
+start|stop|restart|reload|status|instance)
+	[ "$ENABLED" == "FALSE" ] && echo "$QPKG_NAME is disabled" && exit 1
 	$DAEMON $1 $CONF $LOG
 	;;
 *)

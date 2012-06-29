@@ -1,5 +1,6 @@
 #!/bin/sh
 NAME=eyefiserver
+DAEMON_NAME=EyeFiServer
 CONFIG=/etc/$NAME.conf
 TMPCONFIG=/tmp/$NAME.conf
 DAEMON=/etc/init.d/$NAME
@@ -22,10 +23,26 @@ function getval {
 function save {
 	$SED -i -r "s|^\s*$1\s*[:=].*$|$1:$(getparam $1)|" "$TMPCONFIG"
 }
+function passtodaemon(){
+	[ -x $SUDOUSR ] && SUDO=$SUDOUSR
+	[ -x $SUDOOPT ] && SUDO=$SUDOOPT
+	if [ -z ${SUDO} ]; then
+		$ECHO "Can not $1 $DAEMON_NAME: sudo not found."
+		return 1
+	else
+		$SUDO -u \#0 $DAEMON $1 2>&1
+	fi
+}
 echo Content-Type: text/plain
 echo ""
 ACT=$(getparam act)
 case "$ACT" in
+	start|stop|restart)
+		passtodaemon $ACT
+		;;
+	status)
+		$DAEMON $ACT
+		;;
 	getval)
 		getval $(getparam name)
 		;;
@@ -50,16 +67,10 @@ case "$ACT" in
 			save upload_dir_mode
 			$CP -f $TMPCONFIG $CONFIG
 			$RM -f $TMPCONFIG
-			[ -x $SUDOUSR ] && SUDO=$SUDOUSR
-			[ -x $SUDOOPT ] && SUDO=$SUDOOPT
-			if [ -z ${SUDO} ]; then
-				$ECHO "Service NOT restarted: sudo not found."
+			if passtodaemon "reload"; then
+				$ECHO "Configuration applied."
 			else
-				if $SUDO -u \#0 $DAEMON reload 2>&1 ; then
-					$ECHO "Configuration applied."
-				else
-					$ECHO "Configuration saved."
-				fi
+				$ECHO "Configuration saved."
 			fi
 		else
 			$ECHO "Configuration NOT saved: not enough permissions."
