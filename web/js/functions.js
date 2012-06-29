@@ -1,3 +1,4 @@
+$.ajaxSetup({ cache: false });
 function selectTab()
 {
 	var currentTab = $(this);
@@ -15,8 +16,8 @@ function refresh()
 		a.innerHTML=data;
 	});
 	$.get("api.cgi?act=getlog", function(data){
+		$('#logtext').attr("value",data);
 		a=document.getElementById('logtext');
-		a.innerHTML=data;
 		a.scrollTop=a.scrollHeight;
 	});
 }
