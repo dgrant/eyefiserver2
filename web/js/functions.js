@@ -12,13 +12,12 @@ function selectTab()
 function refresh()
 {
 	$.get("api.cgi?act=status", function(data){
-		a=document.getElementById('status');
-		a.innerHTML=data;
+		$('#status').text(data);
 	});
 	$.get("api.cgi?act=getlog", function(data){
-		$('#logtext').attr("value",data);
-		a=document.getElementById('logtext');
-		a.scrollTop=a.scrollHeight;
+		log = $('#logtext');
+		log.val(data);
+		log.scrollTop(log[0].scrollHeight - log.height());
 	});
 }
 function daemon(actname)
