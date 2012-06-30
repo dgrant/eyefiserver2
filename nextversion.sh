@@ -4,3 +4,4 @@ git tag -a -m "Deployed $(LANG=en_GB.UTF-8; date)." "$TAG"
 echo "Setting version number to: $TAG"
 sed -i -r "s/^(QPKG_VER=).*/\1\"$TAG\"/" qpkg/qpkg.cfg
 sed -i -r "s/>.*(<\/footer>)/>$TAG\1/" web/index.html
+git push --tags
