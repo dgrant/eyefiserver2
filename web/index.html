@@ -165,13 +165,14 @@
 		<fieldset class="bordered">
 			<legend class="bordered">Log</legend>
 			<div class="boldGreyContent">
-				<textarea id="logtext" style="width: 100%; height: 250px;" readonly></textarea>
+				<textarea id="logtext" style="width: 100%; height: 250px;" readonly="true"></textarea>
 			</div>
 		</fieldset>
 		<div class="ButtonsSection">
 			<a class="editButton" onclick="daemon('start');">Start</a>
 			<a class="editButton" onclick="daemon('stop');">Stop</a>
 			<a class="editButton" onclick="daemon('restart');">Restart</a>
+			<a class="editButton" onclick="daemon('clearlog');">Clear Log</a>
 			<a class="editButton" onclick="refresh();">Refresh</a>
 		</div>
 		</article>

@@ -27,7 +27,7 @@ function passtodaemon(){
 	[ -x $SUDOUSR ] && SUDO=$SUDOUSR
 	[ -x $SUDOOPT ] && SUDO=$SUDOOPT
 	if [ -z ${SUDO} ]; then
-		$ECHO "Can not $1 $DAEMON_NAME: sudo not found."
+		$ECHO "Can not $1 $DAEMON_NAME: sudo not found"
 		return 1
 	else
 		$SUDO -u \#0 $DAEMON $1 2>&1
@@ -68,16 +68,20 @@ case "$ACT" in
 			$CP -f $TMPCONFIG $CONFIG
 			$RM -f $TMPCONFIG
 			if passtodaemon "reload"; then
-				$ECHO "Configuration applied."
+				$ECHO "Configuration applied"
 			else
-				$ECHO "Configuration saved."
+				$ECHO "Configuration saved"
 			fi
 		else
-			$ECHO "Configuration NOT saved: not enough permissions."
+			$ECHO "Configuration NOT saved: not enough permissions"
 		fi
 		;;
 	getlog)
 		$CAT "$LOG"
+		;;
+	clearlog)
+		$ECHO > "$LOG"
+		$ECHO "$DAEMON_NAME log cleared"
 		;;
 	getuids)
 		case "$(getparam name)" in

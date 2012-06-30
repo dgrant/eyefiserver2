@@ -2,9 +2,6 @@ AuthName "Eye-Fi Server Admin Restricted Access"
 AuthType Basic
 AuthUserFile /mnt/HDA_ROOT/.config/shadow
 AuthGroupFile /dev/null
-#require valid-user
-#<limit GET POST>
-require user admin
-#</Limit>
+require valid-user
 DirectoryIndex index.html
 Options +ExecCGI
