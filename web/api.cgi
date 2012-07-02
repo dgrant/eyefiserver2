@@ -80,7 +80,7 @@ case "$ACT" in
 		$CAT "$LOG"
 		;;
 	clearlog)
-		$ECHO > "$LOG"
+		$ECHO -n > "$LOG"
 		$ECHO "$DAEMON_NAME log cleared"
 		;;
 	getuids)

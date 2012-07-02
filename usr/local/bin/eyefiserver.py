@@ -56,8 +56,9 @@ import signal
 from datetime import datetime
 import ConfigParser
 
-import simplejson
 import math
+try: import simplejson as json
+except ImportError: import json
 
 class Daemon:
     """
@@ -763,7 +764,7 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
         conn.close()
     except:
         None
-    return simplejson.loads(result)
+    return json.loads(result)
 
   def writexmp(self,name,latitude,longitude):
     if latitude>0:
