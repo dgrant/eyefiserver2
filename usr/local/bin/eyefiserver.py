@@ -333,6 +333,13 @@ class EyeFiContentHandler(ContentHandler):
 # Implements an EyeFi server
 class EyeFiServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
 
+  def serve_forever(self):
+    while self.run:
+      try:
+        self.handle_request()
+      except:
+        None
+
   def reload_config(self, signum, frame):
     try:
         configfile = sys.argv[2]
