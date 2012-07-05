@@ -57,8 +57,6 @@ from datetime import datetime
 import ConfigParser
 
 import math
-try: import simplejson as json
-except ImportError: import json
 
 class Daemon:
     """
@@ -66,10 +64,13 @@ class Daemon:
 
     Usage: subclass the Daemon class and override the run() method
     """
-    def __init__(self, pidfile, stdin='/dev/null', stdout='/dev/null', stderr=sys.argv[3]):
+    def __init__(self, pidfile, stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
+            try:
+                self.stderr = sys.argv[3]
+            except:
+                self.stderr = stderr
             self.stdin = stdin
             self.stdout = stdout
-            self.stderr = stderr
             self.pidfile = pidfile
 
     def daemonize(self):
@@ -759,6 +760,8 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
 
   def getlocation(self, aps):
     try:
+        try: import simplejson as json
+        except ImportError: import json
         geourl = 'maps.googleapis.com'
         headers = {"Host": geourl}
         params = "?browser=none&sensor=false"
@@ -769,9 +772,9 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
         resp = conn.getresponse()
         result = resp.read()
         conn.close()
+        return json.loads(result)
     except:
-        None
-    return json.loads(result)
+        return None
 
   def writexmp(self,name,latitude,longitude):
     if latitude>0:
