@@ -760,8 +760,6 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
 
   def getlocation(self, aps):
     try:
-        try: import simplejson as json
-        except ImportError: import json
         geourl = 'maps.googleapis.com'
         headers = {"Host": geourl}
         params = "?browser=none&sensor=false"
@@ -772,7 +770,25 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
         resp = conn.getresponse()
         result = resp.read()
         conn.close()
-        return json.loads(result)
+        try:
+            import simplejson as json
+        except ImportError:
+            try:
+                import json
+                return json.loads(result)
+            except ImportError:
+                try:
+                    import re
+                    result=result.replace("\n"," ")
+                    loc={}
+                    loc['location']={}
+                    loc['location']['lat']=float(re.sub(r'.*"lat"\s*:\s*([\d.]+)\s*[,}\n]+.*',r'\1',result))
+                    loc['location']['lng']=float(re.sub(r'.*"lng"\s*:\s*([\d.]+)\s*[,}\n]+.*',r'\1',result))
+                    loc['accuracy']=float(re.sub(r'.*"accuracy"\s*:\s*([\d.]+)\s*[,\}\n]+.*',r'\1',result))
+                    loc['status']=re.sub(r'.*"status"\s*:\s*"(.*?)"\s*[,}\n]+.*',r'\1',result)
+                    return loc
+                except:
+                    return None
     except:
         return None
 
