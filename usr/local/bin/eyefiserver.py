@@ -775,7 +775,6 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
         except ImportError:
             try:
                 import json
-                return json.loads(result)
             except ImportError:
                 try:
                     import re
@@ -789,6 +788,7 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
                     return loc
                 except:
                     return None
+        return json.loads(result)
     except:
         return None
 
