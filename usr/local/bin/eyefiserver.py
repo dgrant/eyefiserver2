@@ -746,8 +746,8 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
                 return shottime, aps
             shottime = 0
             aps = {}
-        if shottime>0:
-            return shottime, aps
+    if shottime>0:
+        return shottime, aps
 
   def getphotoaps(self, time, aps):
     geotag_lag = int(self.server.config.get('EyeFiServer','geotag_lag'))
