@@ -414,32 +414,29 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
         self.server.stop()
 
     def do_GET(self):
+        try:
+            eyeFiLogger.debug(self.command + " " + self.path + " " + self.request_version)
 
-        eyeFiLogger.debug(self.command + " " + self.path + " " + self.request_version)
+            SOAPAction = ""
+            eyeFiLogger.debug("Headers received in GET request:")
+            for headerName in self.headers.keys():
+                for headerValue in self.headers.getheaders(headerName):
+                    eyeFiLogger.debug(headerName + ": " + headerValue)
+                    if( headerName == "soapaction"):
+                        SOAPAction = headerValue
 
-        SOAPAction = ""
-        eyeFiLogger.debug("Headers received in GET request:")
-        for headerName in self.headers.keys():
-            for headerValue in self.headers.getheaders(headerName):
-                eyeFiLogger.debug(headerName + ": " + headerValue)
-                if( headerName == "soapaction"):
-                    SOAPAction = headerValue
-
-        # couldnt get this to work ..
-        #if((self.client_address == "localhost") and (self.path == "/api/soap/eyefilm/v1x") and (SOAPAction == "\"urn:StopServer\"")):
-        #  eyeFiLogger.debug("Got StopServer request .. stopping server")
-        #  self.server.stop()
-        # or, for python 2.6>
-        #  self.server.shutdown()
-
-        self.send_response(200)
-        self.send_header('Content-type','text/html')
-        # I should be sending a Content-Length header with HTTP/1.1 but I am being lazy
-        # self.send_header('Content-length', '123')
-        self.end_headers()
-        self.wfile.write(self.client_address)
-        self.wfile.write(self.headers)
-        self.close_connection = 0
+            self.send_response(200)
+            self.send_header('Content-type','text/html')
+            # I should be sending a Content-Length header with HTTP/1.1 but I am being lazy
+            # self.send_header('Content-length', '123')
+            self.end_headers()
+            self.wfile.write(self.client_address)
+            self.wfile.write(self.headers)
+            self.close_connection = 0
+        except:
+            eyeFiLogger.error("Got an an exception:")
+            eyeFiLogger.error(traceback.format_exc())
+            raise
 
 
     def do_POST(self):
