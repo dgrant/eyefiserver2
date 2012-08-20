@@ -641,7 +641,8 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
         eyeFiLogger.debug("Using dir_mode " + dir_mode)
 
         geotag_enable = int(self.server.config.getint('EyeFiServer','geotag_enable'))
-        geotag_accuracy = int(self.server.config.get('EyeFiServer','geotag_accuracy'))
+        if geotag_enable:
+            geotag_accuracy = int(self.server.config.get('EyeFiServer','geotag_accuracy'))
 
         tempDir = os.path.dirname(self.server.config.get('EyeFiServer','upload_dir'))
 
@@ -955,7 +956,7 @@ def runEyeFi():
     configfile = sys.argv[2]
     eyeFiLogger.info("Reading config " + configfile)
 
-    config = ConfigParser.SafeConfigParser()
+    config = ConfigParser.SafeConfigParser({'geotag_enable': '0'})
     config.read(configfile)
 
     # open file logging
