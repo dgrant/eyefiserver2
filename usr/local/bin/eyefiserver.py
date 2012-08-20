@@ -29,6 +29,7 @@ import os
 import socket
 import thread
 import StringIO
+import traceback
 
 import hashlib
 import binascii
@@ -436,144 +437,149 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
 
 
     def do_POST(self):
-        eyeFiLogger.debug(self.command + " " + self.path + " " + self.request_version)
-
-        SOAPAction = ""
-        contentLength = ""
-
-        # Loop through all the request headers and pick out ones that are relevant
-
-        eyeFiLogger.debug("Headers received in POST request:")
-        for headerName in self.headers.keys():
-            for headerValue in self.headers.getheaders(headerName):
-
-                if( headerName == "soapaction"):
-                    SOAPAction = headerValue
-
-                if( headerName == "content-length"):
-                    contentLength = int(headerValue)
-
-                eyeFiLogger.debug(headerName + ": " + headerValue)
-
-
-        # Read contentLength bytes worth of data
-        eyeFiLogger.debug("Attempting to read " + str(contentLength) + " bytes of data")
-        # postData = self.rfile.read(contentLength)
         try:
-            from StringIO import StringIO
-            import tempfile
-        except ImportError:
-            eyeFiLogger.debug("No StringIO module")
-        chunksize = 1048576 # 1MB
-        mem = StringIO()
-        while 1:
-            remain = contentLength - mem.tell()
-            if remain <= 0: break
-            chunk = self.rfile.read(min(chunksize, remain))
-            if not chunk: break
-            mem.write(chunk)
-            print remain
-        print "Finished"
-        postData = mem.getvalue()
-        mem.close()
+            eyeFiLogger.debug(self.command + " " + self.path + " " + self.request_version)
 
-        eyeFiLogger.debug("Finished reading " + str(contentLength) + " bytes of data")
+            SOAPAction = ""
+            contentLength = ""
 
-        # TODO: Implement some kind of visual progress bar
-        # bytesRead = 0
-        # postData = ""
+            # Loop through all the request headers and pick out ones that are relevant
 
-        # while(bytesRead < contentLength):
-        #  postData = postData + self.rfile.read(1)
-        #   bytesRead = bytesRead + 1
+            eyeFiLogger.debug("Headers received in POST request:")
+            for headerName in self.headers.keys():
+                for headerValue in self.headers.getheaders(headerName):
 
-        #  if(bytesRead % 10000 == 0):
-        #    print "#",
+                    if( headerName == "soapaction"):
+                        SOAPAction = headerValue
+
+                    if( headerName == "content-length"):
+                        contentLength = int(headerValue)
+
+                    eyeFiLogger.debug(headerName + ": " + headerValue)
 
 
-        # Perform action based on path and SOAPAction
-        # A SOAPAction of StartSession indicates the beginning of an EyeFi
-        # authentication request
-        if((self.path == "/api/soap/eyefilm/v1") and (SOAPAction == "\"urn:StartSession\"")):
-            eyeFiLogger.debug("Got StartSession request")
-            response = self.startSession(postData)
-            contentLength = len(response)
+            # Read contentLength bytes worth of data
+            eyeFiLogger.debug("Attempting to read " + str(contentLength) + " bytes of data")
+            # postData = self.rfile.read(contentLength)
+            try:
+                from StringIO import StringIO
+                import tempfile
+            except ImportError:
+                eyeFiLogger.debug("No StringIO module")
+            chunksize = 1048576 # 1MB
+            mem = StringIO()
+            while 1:
+                remain = contentLength - mem.tell()
+                if remain <= 0: break
+                chunk = self.rfile.read(min(chunksize, remain))
+                if not chunk: break
+                mem.write(chunk)
+                print remain
+            print "Finished"
+            postData = mem.getvalue()
+            mem.close()
 
-            eyeFiLogger.debug("StartSession response: " + response)
+            eyeFiLogger.debug("Finished reading " + str(contentLength) + " bytes of data")
 
-            self.send_response(200)
-            self.send_header('Date', self.date_time_string())
-            self.send_header('Pragma','no-cache')
-            self.send_header('Server','Eye-Fi Agent/2.0.4.0 (Windows XP SP2)')
-            self.send_header('Content-Type','text/xml; charset="utf-8"')
-            self.send_header('Content-Length', contentLength)
-            self.end_headers()
+            # TODO: Implement some kind of visual progress bar
+            # bytesRead = 0
+            # postData = ""
 
-            self.wfile.write(response)
-            self.wfile.flush()
-            self.handle_one_request()
+            # while(bytesRead < contentLength):
+            #  postData = postData + self.rfile.read(1)
+            #   bytesRead = bytesRead + 1
 
-        # GetPhotoStatus allows the card to query if a photo has been uploaded
-        # to the server yet
-        if((self.path == "/api/soap/eyefilm/v1") and (SOAPAction == "\"urn:GetPhotoStatus\"")):
-            eyeFiLogger.debug("Got GetPhotoStatus request")
-
-            response = self.getPhotoStatus(postData)
-            contentLength = len(response)
-
-            eyeFiLogger.debug("GetPhotoStatus response: " + response)
-
-            self.send_response(200)
-            self.send_header('Date', self.date_time_string())
-            self.send_header('Pragma','no-cache')
-            self.send_header('Server','Eye-Fi Agent/2.0.4.0 (Windows XP SP2)')
-            self.send_header('Content-Type','text/xml; charset="utf-8"')
-            self.send_header('Content-Length', contentLength)
-            self.end_headers()
-
-            self.wfile.write(response)
-            self.wfile.flush()
+            #  if(bytesRead % 10000 == 0):
+            #    print "#",
 
 
-        # If the URL is upload and there is no SOAPAction the card is ready to send a picture to me
-        if((self.path == "/api/soap/eyefilm/v1/upload") and (SOAPAction == "")):
-            eyeFiLogger.debug("Got upload request")
-            response = self.uploadPhoto(postData)
-            contentLength = len(response)
+            # Perform action based on path and SOAPAction
+            # A SOAPAction of StartSession indicates the beginning of an EyeFi
+            # authentication request
+            if((self.path == "/api/soap/eyefilm/v1") and (SOAPAction == "\"urn:StartSession\"")):
+                eyeFiLogger.debug("Got StartSession request")
+                response = self.startSession(postData)
+                contentLength = len(response)
 
-            eyeFiLogger.debug("Upload response: " + response)
+                eyeFiLogger.debug("StartSession response: " + response)
 
-            self.send_response(200)
-            self.send_header('Date', self.date_time_string())
-            self.send_header('Pragma','no-cache')
-            self.send_header('Server','Eye-Fi Agent/2.0.4.0 (Windows XP SP2)')
-            self.send_header('Content-Type','text/xml; charset="utf-8"')
-            self.send_header('Content-Length', contentLength)
-            self.end_headers()
+                self.send_response(200)
+                self.send_header('Date', self.date_time_string())
+                self.send_header('Pragma','no-cache')
+                self.send_header('Server','Eye-Fi Agent/2.0.4.0 (Windows XP SP2)')
+                self.send_header('Content-Type','text/xml; charset="utf-8"')
+                self.send_header('Content-Length', contentLength)
+                self.end_headers()
 
-            self.wfile.write(response)
-            self.wfile.flush()
+                self.wfile.write(response)
+                self.wfile.flush()
+                self.handle_one_request()
 
-        # If the URL is upload and SOAPAction is MarkLastPhotoInRoll
-        if((self.path == "/api/soap/eyefilm/v1") and (SOAPAction == "\"urn:MarkLastPhotoInRoll\"")):
-            eyeFiLogger.debug("Got MarkLastPhotoInRoll request")
-            response = self.markLastPhotoInRoll(postData)
-            contentLength = len(response)
+            # GetPhotoStatus allows the card to query if a photo has been uploaded
+            # to the server yet
+            if((self.path == "/api/soap/eyefilm/v1") and (SOAPAction == "\"urn:GetPhotoStatus\"")):
+                eyeFiLogger.debug("Got GetPhotoStatus request")
 
-            eyeFiLogger.debug("MarkLastPhotoInRoll response: " + response)
-            self.send_response(200)
-            self.send_header('Date', self.date_time_string())
-            self.send_header('Pragma','no-cache')
-            self.send_header('Server','Eye-Fi Agent/2.0.4.0 (Windows XP SP2)')
-            self.send_header('Content-Type','text/xml; charset="utf-8"')
-            self.send_header('Content-Length', contentLength)
-            self.send_header('Connection', 'Close')
-            self.end_headers()
+                response = self.getPhotoStatus(postData)
+                contentLength = len(response)
 
-            self.wfile.write(response)
-            self.wfile.flush()
+                eyeFiLogger.debug("GetPhotoStatus response: " + response)
 
-            eyeFiLogger.debug("Connection closed.")
+                self.send_response(200)
+                self.send_header('Date', self.date_time_string())
+                self.send_header('Pragma','no-cache')
+                self.send_header('Server','Eye-Fi Agent/2.0.4.0 (Windows XP SP2)')
+                self.send_header('Content-Type','text/xml; charset="utf-8"')
+                self.send_header('Content-Length', contentLength)
+                self.end_headers()
+
+                self.wfile.write(response)
+                self.wfile.flush()
+
+
+            # If the URL is upload and there is no SOAPAction the card is ready to send a picture to me
+            if((self.path == "/api/soap/eyefilm/v1/upload") and (SOAPAction == "")):
+                eyeFiLogger.debug("Got upload request")
+                response = self.uploadPhoto(postData)
+                contentLength = len(response)
+
+                eyeFiLogger.debug("Upload response: " + response)
+
+                self.send_response(200)
+                self.send_header('Date', self.date_time_string())
+                self.send_header('Pragma','no-cache')
+                self.send_header('Server','Eye-Fi Agent/2.0.4.0 (Windows XP SP2)')
+                self.send_header('Content-Type','text/xml; charset="utf-8"')
+                self.send_header('Content-Length', contentLength)
+                self.end_headers()
+
+                self.wfile.write(response)
+                self.wfile.flush()
+
+            # If the URL is upload and SOAPAction is MarkLastPhotoInRoll
+            if((self.path == "/api/soap/eyefilm/v1") and (SOAPAction == "\"urn:MarkLastPhotoInRoll\"")):
+                eyeFiLogger.debug("Got MarkLastPhotoInRoll request")
+                response = self.markLastPhotoInRoll(postData)
+                contentLength = len(response)
+
+                eyeFiLogger.debug("MarkLastPhotoInRoll response: " + response)
+                self.send_response(200)
+                self.send_header('Date', self.date_time_string())
+                self.send_header('Pragma','no-cache')
+                self.send_header('Server','Eye-Fi Agent/2.0.4.0 (Windows XP SP2)')
+                self.send_header('Content-Type','text/xml; charset="utf-8"')
+                self.send_header('Content-Length', contentLength)
+                self.send_header('Connection', 'Close')
+                self.end_headers()
+
+                self.wfile.write(response)
+                self.wfile.flush()
+
+                eyeFiLogger.debug("Connection closed.")
+        except:
+            eyeFiLogger.error("Got an an exception:")
+            eyeFiLogger.error(traceback.format_exc())
+            raise
 
 
     # Handles MarkLastPhotoInRoll action
