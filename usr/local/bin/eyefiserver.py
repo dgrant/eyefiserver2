@@ -70,10 +70,7 @@ class Daemon:
                  stdout='/dev/null',
                  stderr='/dev/null',
                 ):
-        try:
-            self.stderr = sys.argv[3]
-        except:
-            self.stderr = stderr
+        self.stderr = stderr
         self.stdin = stdin
         self.stdout = stdout
         self.pidfile = pidfile
