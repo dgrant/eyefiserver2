@@ -343,7 +343,11 @@ class EyeFiServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
 
     def serve_forever(self):
         while self.run:
-            self.handle_request()
+            try:
+                self.handle_request()
+            except select.error, e:
+                if e[0] != 4:
+                    raise e
 
     def reload_config(self, signum, frame):
         try:
@@ -782,9 +786,11 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
                         loc['status']=re.sub(r'.*"status"\s*:\s*"(.*?)"\s*[,}\n]+.*',r'\1',result)
                         return loc
                     except:
+                        eyeFiLogger.debug("Geolocation service response contains no coordinates: " + result)
                         return None
             return json.loads(result)
         except:
+            eyeFiLogger.debug("Error connecting to geolocation service")
             return None
 
     def writexmp(self,name,latitude,longitude):
