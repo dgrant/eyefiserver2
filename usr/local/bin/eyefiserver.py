@@ -956,38 +956,14 @@ def runEyeFi():
     fileHandler.setFormatter(eyeFiLoggingFormat)
     eyeFiLogger.addHandler(fileHandler)
 
-
     server_address = (config.get('EyeFiServer','host_name'), config.getint('EyeFiServer','host_port'))
 
-    # run webserver as www-data - cant get it working
-    #if config.get('EyeFiServer','user_id')!='':
-    #  os.setuid(config.getint('EyeFiServer','user_id'))
-
-    try:
     # Create an instance of an HTTP server. Requests will be handled
     # by the class EyeFiRequestHandler
-        eyeFiServer = EyeFiServer(server_address, EyeFiRequestHandler)
-        eyeFiServer.config = config
-
-        # Spawn a new thread for the server
-        # thread.start_new_thread(eyeFiServer.serve, ())
-        # eyeFiLogger.info("Eye-Fi server started listening on port " + str(server_address[1]))
-
-        eyeFiLogger.info("Eye-Fi server started listening on port " + str(server_address[1]))
-        eyeFiServer.serve_forever()
-
-        #raw_input("\nPress <RETURN> to stop server\n")
-        #eyeFiServer.stop()
-        #eyeFiLogger.info("Eye-Fi server stopped")
-        #eyeFiServer.socket.close()
-
-    except KeyboardInterrupt:
-        #eyeFiServer.socket.close()
-        pass
-
-
-
-    #eyeFiLogger.info("Eye-Fi server stopped")
+    eyeFiServer = EyeFiServer(server_address, EyeFiRequestHandler)
+    eyeFiServer.config = config
+    eyeFiLogger.info("Eye-Fi server started listening on port " + str(server_address[1]))
+    eyeFiServer.serve_forever()
 
 class MyDaemon(Daemon):
     def run(self):
