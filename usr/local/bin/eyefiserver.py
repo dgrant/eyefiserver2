@@ -340,10 +340,7 @@ class EyeFiServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
 
     def serve_forever(self):
         while self.run:
-            try:
-                self.handle_request()
-            except:
-                None
+            self.handle_request()
 
     def reload_config(self, signum, frame):
         try:
