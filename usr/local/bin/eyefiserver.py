@@ -19,7 +19,6 @@
 """
 
 
-import string
 import cgi
 import time
 from datetime import timedelta
@@ -65,7 +64,12 @@ class Daemon:
 
     Usage: subclass the Daemon class and override the run() method
     """
-    def __init__(self, pidfile, stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
+    def __init__(self,
+                 pidfile,
+                 stdin='/dev/null',
+                 stdout='/dev/null',
+                 stderr='/dev/null',
+                ):
         try:
             self.stderr = sys.argv[3]
         except:
@@ -87,7 +91,8 @@ class Daemon:
 #                            sys.exit(0)
                 return 0
         except OSError, e:
-            sys.stderr.write("fork #1 failed: %d (%s)\n" % (e.errno, e.strerror))
+            sys.stderr.write("fork #1 failed: %d (%s)\n" \
+                             % (e.errno, e.strerror))
             sys.exit(1)
 
         # decouple from parent environment
@@ -103,7 +108,8 @@ class Daemon:
 #                            sys.exit(0)
                 return 1
         except OSError, e:
-            sys.stderr.write("fork #2 failed: %d (%s)\n" % (e.errno, e.strerror))
+            sys.stderr.write("fork #2 failed: %d (%s)\n" \
+                             % (e.errno, e.strerror))
             sys.exit(1)
 
         # redirect standard file descriptors
@@ -481,18 +487,6 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
 
             eyeFiLogger.debug("Finished reading " + str(contentLength) + " bytes of data")
 
-            # TODO: Implement some kind of visual progress bar
-            # bytesRead = 0
-            # postData = ""
-
-            # while(bytesRead < contentLength):
-            #  postData = postData + self.rfile.read(1)
-            #   bytesRead = bytesRead + 1
-
-            #  if(bytesRead % 10000 == 0):
-            #    print "#",
-
-
             # Perform action based on path and SOAPAction
             # A SOAPAction of StartSession indicates the beginning of an EyeFi
             # authentication request
@@ -680,7 +674,7 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
                 if uid != 0 and gid != 0:
                     os.chown(uploadDir, uid, gid)
                 if file_mode != "":
-                    os.chmod(uploadDir, string.atoi(dir_mode))
+                    os.chmod(uploadDir, int(dir_mode))
 
             f=imageTarfile.extract(member, uploadDir)
             imagePath = os.path.join(uploadDir, member.name)
@@ -689,7 +683,7 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
             if uid != 0 and gid != 0:
                 os.chown(imagePath, uid, gid)
             if file_mode != "":
-                os.chmod(imagePath, string.atoi(file_mode))
+                os.chmod(imagePath, int(file_mode))
 
             if geotag_enable>0 and member.name.lower().endswith(".log"):
                 eyeFiLogger.debug("Processing LOG file " + imagePath)
@@ -706,7 +700,7 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
                         if uid != 0 and gid != 0:
                             os.chown(xmpPath, uid, gid)
                         if file_mode != "":
-                            os.chmod(xmpPath, string.atoi(file_mode))
+                            os.chmod(xmpPath, int(file_mode))
                 except:
                     eyeFiLogger.error("Error processing LOG file " + imagePath)
 
