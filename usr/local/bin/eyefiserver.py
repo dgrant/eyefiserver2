@@ -29,6 +29,7 @@ import socket
 import thread
 import StringIO
 import traceback
+import errno
 
 import hashlib
 import binascii
@@ -346,7 +347,7 @@ class EyeFiServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
             try:
                 self.handle_request()
             except select.error, e:
-                if e[0] != 4:
+                if e[0] != errno.EINTR:
                     raise e
 
     def reload_config(self, signum, frame):
@@ -769,29 +770,29 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
             resp = conn.getresponse()
             result = resp.read()
             conn.close()
-            try:
-                import simplejson as json
-            except ImportError:
-                try:
-                    import json
-                except ImportError:
-                    try:
-                        import re
-                        result=result.replace("\n"," ")
-                        loc={}
-                        loc['location']={}
-                        loc['location']['lat']=float(re.sub(r'.*"lat"\s*:\s*([\d.]+)\s*[,}\n]+.*',r'\1',result))
-                        loc['location']['lng']=float(re.sub(r'.*"lng"\s*:\s*([\d.]+)\s*[,}\n]+.*',r'\1',result))
-                        loc['accuracy']=float(re.sub(r'.*"accuracy"\s*:\s*([\d.]+)\s*[,\}\n]+.*',r'\1',result))
-                        loc['status']=re.sub(r'.*"status"\s*:\s*"(.*?)"\s*[,}\n]+.*',r'\1',result)
-                        return loc
-                    except:
-                        eyeFiLogger.debug("Geolocation service response contains no coordinates: " + result)
-                        return None
-            return json.loads(result)
         except:
             eyeFiLogger.debug("Error connecting to geolocation service")
             return None
+        try:
+            try:
+                import simplejson as json
+            except ImportError:
+                import json
+            return json.loads(result)
+        except:
+            try:
+                import re
+                result=result.replace("\n"," ")
+                loc={}
+                loc['location']={}
+                loc['location']['lat']=float(re.sub(r'.*"lat"\s*:\s*([\d.]+)\s*[,}\n]+.*',r'\1',result))
+                loc['location']['lng']=float(re.sub(r'.*"lng"\s*:\s*([\d.]+)\s*[,}\n]+.*',r'\1',result))
+                loc['accuracy']=float(re.sub(r'.*"accuracy"\s*:\s*([\d.]+)\s*[,\}\n]+.*',r'\1',result))
+                loc['status']=re.sub(r'.*"status"\s*:\s*"(.*?)"\s*[,}\n]+.*',r'\1',result)
+                return loc
+            except:
+                eyeFiLogger.debug("Geolocation service response contains no coordinates: " + result)
+                return None
 
     def writexmp(self,name,latitude,longitude):
         if latitude>0:
