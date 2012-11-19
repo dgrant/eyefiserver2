@@ -663,7 +663,12 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
         imageTarfile = tarfile.open(imageTarPath)
 
         for member in imageTarfile.getmembers():
-            timeoffset = time.timezone if (time.daylight == 0) else time.altzone
+            # If timezone is a daylight savings timezone, and we are
+            # currently in daylight savings time, then use the altzone
+            if time.daylight != 0 and time.localtime().tm_isdst != 0:
+                timeoffset = time.altzone
+            else:
+                timeoffset = time.timezone
             timezone = timeoffset / 60 / 60 * -1
             imageDate = datetime.fromtimestamp(member.mtime) - timedelta(hours=timezone)
             uploadDir = imageDate.strftime(self.server.config.get('EyeFiServer','upload_dir'))
