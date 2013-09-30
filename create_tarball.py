@@ -7,18 +7,22 @@ import tarfile
 
 SCRIPT_DIR = os.path.realpath(os.path.split(__file__)[0])
 DIRS = ('usr', 'etc')
-TARBALL = 'eyefiserver2-%s.tar.gz'
+#FILES = ('Makefile',)
+PKG_NAME = 'eyefiserver2'
 
 try:
     olddir = os.getcwd()
-    os.chdir(SCRIPT_DIR)
+    dirname = '%s_%s' % (PKG_NAME, sys.argv[1])
+    tarfile_name = '%s.tar.gz' % dirname
     tempdir = tempfile.mkdtemp()
-    tarball = tarfile.open(TARBALL % sys.argv[1], mode='w:gz')
+    tardir = os.path.join(tempdir, dirname)
+    tarball = tarfile.open(tarfile_name, mode='w:gz')
     for dir in DIRS:
-        shutil.copytree(dir, os.path.join(tempdir, dir))
+        shutil.copytree(dir, os.path.join(tardir, dir))
+    for file in FILES:
+        shutil.copyfile(file, os.path.join(tardir, file))
     os.chdir(tempdir)
-    for dir in DIRS:
-        tarball.add(os.path.join(dir))
+    tarball.add(dirname)
     tarball.close()
 finally:
     os.chdir(olddir)
