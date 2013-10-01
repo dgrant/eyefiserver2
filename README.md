@@ -7,7 +7,7 @@ This is a "fork" of the defunct eyefiserver project at http://code.google.com/p/
 
 Eye-Fi memory cards send pictures from digital cameras to your computer (or any machine on your network) using wifi. Read more about Eye-Fi at http://eye.fi
 
-This is a based on the work of Jeff Tchang (website no longer available).
+This is a based on [the work of Jeff Tchang](http://returnbooleantrue.blogspot.nl/2009/01/eye-fi-standalone-server.html).
 
 There is a similar project at
 
