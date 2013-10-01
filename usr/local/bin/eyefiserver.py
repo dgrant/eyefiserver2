@@ -660,7 +660,11 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
         eyeFiLogger.debug("Closed file " + imageTarPath)
 
         eyeFiLogger.debug("Extracting TAR file " + imageTarPath)
-        imageTarfile = tarfile.open(imageTarPath)
+        try:
+            imageTarfile = tarfile.open(imageTarPath)
+        except ReadError, error:
+            eyeFiLogger.error("Failed to open %s" % imageTarPath)
+            raise
 
         for member in imageTarfile.getmembers():
             # If timezone is a daylight savings timezone, and we are
