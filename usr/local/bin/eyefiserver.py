@@ -609,7 +609,7 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
         headerParameters = contentTypeHeader.split(";")
         eyeFiLogger.debug(headerParameters)
 
-        boundary = headerParameters[1].split("=")
+        boundary = headerParameters[-1].split("=")
         boundary = boundary[1].strip()
         eyeFiLogger.debug("Extracted boundary: " + boundary)
 
