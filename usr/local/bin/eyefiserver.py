@@ -31,6 +31,7 @@ import thread
 import StringIO
 import traceback
 import errno
+import tempfile
 
 import hashlib
 import binascii
@@ -644,12 +645,8 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
         if geotag_enable:
             geotag_accuracy = int(self.server.config.get('EyeFiServer','geotag_accuracy'))
 
-        tempDir = self.server.config.get('EyeFiServer', 'temp_dir')
-
-
-        imageTarPath = os.path.join(tempDir, imageTarfileName)
+        imageTarPath = os.path.join(tempfile.gettempdir(), imageTarfileName)
         eyeFiLogger.debug("Generated path " + imageTarPath)
-
 
         fileHandle = open(imageTarPath, 'wb')
         eyeFiLogger.debug("Opened file " + imageTarPath + " for binary writing")
