@@ -610,7 +610,7 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
         headerParameters = contentTypeHeader.split(";")
         eyeFiLogger.debug(headerParameters)
 
-        boundary = headerParameters[1].split("=")
+        boundary = headerParameters[-1].split("=")
         boundary = boundary[1].strip()
         eyeFiLogger.debug("Extracted boundary: " + boundary)
 
@@ -644,7 +644,7 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
         if geotag_enable:
             geotag_accuracy = int(self.server.config.get('EyeFiServer','geotag_accuracy'))
 
-        tempDir = os.path.dirname(self.server.config.get('EyeFiServer','upload_dir'))
+        tempDir = self.server.config.get('EyeFiServer', 'temp_dir')
 
 
         imageTarPath = os.path.join(tempDir, imageTarfileName)
