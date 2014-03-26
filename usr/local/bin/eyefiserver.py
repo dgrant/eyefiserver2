@@ -23,6 +23,7 @@ import cgi
 import time
 from datetime import timedelta
 
+import random
 import sys
 import os
 import socket
@@ -915,21 +916,20 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
         credentialElement.appendChild(credentialElementText)
 
         snonceElement = doc.createElement("snonce")
-        snonceElementText = doc.createTextNode("99208c155fc1883579cf0812ec0fe6d2")
+        snonceElementText = doc.createTextNode("%x" % random.getrandbits(128))
         snonceElement.appendChild(snonceElementText)
 
         transfermodeElement = doc.createElement("transfermode")
-        transfermodeElementText = doc.createTextNode("2")
+        transfermodeElementText = doc.createTextNode(handler.extractedElements["transfermode"])
         transfermodeElement.appendChild(transfermodeElementText)
 
         transfermodetimestampElement = doc.createElement("transfermodetimestamp")
-        transfermodetimestampElementText = doc.createTextNode("1230268824")
+        transfermodetimestampElementText = doc.createTextNode(handler.extractedElements["transfermodetimestamp"])
         transfermodetimestampElement.appendChild(transfermodetimestampElementText)
 
         upsyncallowedElement = doc.createElement("upsyncallowed")
         upsyncallowedElementText = doc.createTextNode("false")
         upsyncallowedElement.appendChild(upsyncallowedElementText)
-
 
         startSessionResponseElement.appendChild(credentialElement)
         startSessionResponseElement.appendChild(snonceElement)
