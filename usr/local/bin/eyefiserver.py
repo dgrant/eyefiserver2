@@ -351,6 +351,14 @@ class EyeFiServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
             except select.error, e:
                 if e[0] != errno.EINTR:
                     raise e
+                else:
+                    eyeFiLogger.info("Swallowing exception: %s" % e)
+            except socket.error, e:
+                if e[0] != errno.EBADF:
+                    raise e
+                else:
+                    eyeFiLogger.info("Swallowing exception, perhaps socket closed: %s" % e)
+
 
     def reload_config(self, signum, frame):
         try:
@@ -364,8 +372,10 @@ class EyeFiServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
         try:
             eyeFiLogger.info("Eye-Fi server stopped ")
             self.stop()
+            self.socket.close()
         except:
             eyeFiLogger.error("Error stopping server")
+            traceback.print_exc()
 
     def server_bind(self):
 
