@@ -1,6 +1,8 @@
 eyefiserver2
 ============
 
+There aren't really any active developers except for me. If you'd like to make a donation to help fix any of the open issues, you can make a donation here: https://gratipay.com/dgrant/
+
 A standalone Eye-Fi server in Python, for Linux
 
 This is a "fork" of the defunct eyefiserver project at http://code.google.com/p/eyefiserver.
