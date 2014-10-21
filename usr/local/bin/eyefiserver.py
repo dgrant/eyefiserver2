@@ -59,6 +59,8 @@ import signal
 from datetime import datetime
 import ConfigParser
 
+DEFAULTS = {'upload_uid': '-1', 'upload_gid': '-1', 'geotag_enable': '0'}
+
 import math
 
 class Daemon:
@@ -298,6 +300,9 @@ consoleHandler.setFormatter(eyeFiLoggingFormat)
 eyeFiLogger.addHandler(consoleHandler)
 
 
+def fix_ownership(path, uid, gid):
+   if uid != -1 and gid != -1:
+       os.chown(path, uid, gid)
 
 
 # Eye Fi XML SAX ContentHandler
@@ -677,7 +682,7 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
             eyeFiLogger.debug("Creating folder " + uploadDir)
             if not os.path.isdir(uploadDir):
                 os.makedirs(uploadDir)
-                os.chown(uploadDir, uid, gid)
+                fix_ownership(uploadDir, uid, gid)
                 if file_mode != "":
                     os.chmod(uploadDir, int(dir_mode))
 
@@ -685,7 +690,7 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
             imagePath = os.path.join(uploadDir, member.name)
             eyeFiLogger.debug("imagePath " + imagePath)
             os.utime(imagePath, (member.mtime + timeoffset, member.mtime + timeoffset))
-            os.chown(imagePath, uid, gid)
+            fix_ownership(imagePath, uid, gid)
             if file_mode != "":
                 os.chmod(imagePath, int(file_mode))
 
@@ -701,7 +706,7 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
                         xmpPath=os.path.join(uploadDir, xmpName)
                         eyeFiLogger.debug("Writing XMP file " + xmpPath)
                         self.writexmp(xmpPath,float(loc['location']['lat']),float(loc['location']['lng']))
-                        os.chown(xmpPath, uid, gid)
+                        fix_ownership(xmpPath, uid, gid)
                         if file_mode != "":
                             os.chmod(xmpPath, int(file_mode))
                 except:
@@ -943,7 +948,7 @@ def stopEyeFi():
     configfile = sys.argv[2]
     eyeFiLogger.info("Reading config " + configfile)
 
-    config = ConfigParser.SafeConfigParser()
+    config = ConfigParser.SafeConfigParser(defaults=DEFAULTS)
     config.read(configfile)
 
     port = config.getint('EyeFiServer','host_port')
@@ -960,7 +965,7 @@ def runEyeFi():
     configfile = sys.argv[2]
     eyeFiLogger.info("Reading config " + configfile)
 
-    config = ConfigParser.SafeConfigParser({'geotag_enable': '0'})
+    config = ConfigParser.SafeConfigParser(defaults=DEFAULTS)
     config.read(configfile)
 
     # open file logging
