@@ -63,6 +63,8 @@
 #SYS_QPKG_CONF_FIELD_SERVICE_PIDFILE="Pid_File"
 #SYS_QPKG_CONF_FIELD_AUTHOR="Author"
 #SYS_QPKG_CONF_FIELD_RC_NUMBER="RC_Number"
+SYS_QPKG_CONF_FIELD_DESKTOP="Desktop"
+SYS_QPKG_CONF_FIELD_DISPLAY_NAME="Display_Name"
 ## The following variables are assigned values at run-time.
 #SYS_HOSTNAME=$($CMD_HOSTNAME)
 ## Data file name (one of SYS_QPKG_DATA_FILE_GZIP, SYS_QPKG_DATA_FILE_BZIP2,
@@ -111,12 +113,15 @@ NAME=eyefiserver
 #}"
 #
 PKG_POST_REMOVE="{
-$CMD_RM -rf ${SYS_WEB_PATH}/${NAME}
-$CMD_RM -f ${SYS_INIT_DIR}/${NAME}
-$CMD_RM -f ${SYS_CONFIG_DIR}/${NAME}.conf
-$CMD_RM -f /etc/${NAME}.conf
-$CMD_RM -f /usr/local/bin/${NAME}.py
-$CMD_SED -i /${NAME}/d ${SYS_QPKG_INSTALL_PATH}/Optware/etc/sudoers
+${CMD_RM} -rf ${SYS_WEB_PATH}/${NAME}
+${CMD_RM} -f /home/httpd/cgi-bin/qpkg/${QPKG_NAME}
+${CMD_RM} -f ${SYS_INIT_DIR}/${NAME}
+${CMD_RM} -f ${SYS_CONFIG_DIR}/${NAME}.conf
+${CMD_RM} -f /etc/${NAME}.conf
+${CMD_RM} -f /usr/local/bin/${NAME}.py
+${CMD_RM} -f /var/log/${NAME}.log
+${CMD_RM} -rf /home/httpd/RSS/images/${QPKG_NAME}*.gif
+${CMD_SED} -i /${NAME}/d ${SYS_QPKG_INSTALL_PATH}/Optware/etc/sudoers
 }"
 #
 ######################################################################
@@ -144,11 +149,30 @@ $CMD_SED -i /${NAME}/d ${SYS_QPKG_INSTALL_PATH}/Optware/etc/sudoers
 #}
 #
 pkg_post_install(){
-$CMD_CHMOD 666 ${SYS_QPKG_DIR}/${NAME}.conf
-$CMD_CHMOD 555 ${SYS_QPKG_DIR}/web/api.cgi
-[ -d ${SYS_WEB_PATH}/${NAME} ] || $CMD_LN -s ${SYS_QPKG_DIR}/web ${SYS_WEB_PATH}/${NAME}
-$CMD_LN -sf ${SYS_QPKG_DIR}/${NAME}.conf ${SYS_CONFIG_DIR}/
-$CMD_LN -sf ${SYS_QPKG_DIR}/${NAME} ${SYS_INIT_DIR}/
-$CMD_SED -i /${NAME}/d ${SYS_QPKG_INSTALL_PATH}/Optware/etc/sudoers
-$CMD_ECHO 'httpdusr ALL=(admin) NOPASSWD: '${SYS_INIT_DIR}'/'${NAME} >> ${SYS_QPKG_INSTALL_PATH}/Optware/etc/sudoers
+${CMD_SETCFG} ${QPKG_NAME} ${SYS_QPKG_CONF_FIELD_DISPLAY_NAME} "${QPKG_DISPLAY_NAME}" -f ${SYS_QPKG_CONFIG_FILE}
+${CMD_CHMOD} 666 ${SYS_QPKG_DIR}/${NAME}.conf
+${CMD_LN} -sf ${SYS_QPKG_DIR}/${NAME}.conf ${SYS_CONFIG_DIR}/
+${CMD_LN} -sf ${SYS_QPKG_DIR}/${NAME} ${SYS_INIT_DIR}/
+${CMD_SED} -i /${NAME}/d ${SYS_QPKG_INSTALL_PATH}/Optware/etc/sudoers
+${CMD_ECHO} 'httpdusr ALL=(admin) NOPASSWD: '${SYS_INIT_DIR}'/'${NAME} >> ${SYS_QPKG_INSTALL_PATH}/Optware/etc/sudoers
+${CMD_RM} -rf ${SYS_QPKG_DIR}/.qpkg_icon*.gif
+${CMD_RM} -rf /home/httpd/RSS/images/${QPKG_NAME}*.gif
+${CMD_LN} -sf ${SYS_QPKG_DIR}/ui/images/icon_80.png ${SYS_QPKG_DIR}/.qpkg_icon_80.gif
+if [ $($CMD_GETCFG System Version -d 3.8.0) \< "4.0.0" ]; then
+	${CMD_SETCFG} ${QPKG_NAME} ${SYS_QPKG_CONF_FIELD_WEBUI} "/${name}" -f ${SYS_QPKG_CONFIG_FILE}
+	${CMD_CHMOD} 555 ${SYS_QPKG_DIR}/web/api.cgi
+	[ -d ${SYS_WEB_PATH}/${NAME} ] || $CMD_LN -s ${SYS_QPKG_DIR}/web ${SYS_WEB_PATH}/${NAME}
+	${CMD_LN} -sf ${SYS_QPKG_DIR}/ui/images/icon_64.png ${SYS_QPKG_DIR}/.qpkg_icon.gif
+	${CMD_LN} -sf ${SYS_QPKG_DIR}/ui/images/icon_64_gray.png ${SYS_QPKG_DIR}/.qpkg_icon_gray.gif
+	${CMD_LN} -sf ${SYS_QPKG_DIR}/.qpkg_icon_80.gif /home/httpd/RSS/images/${QPKG_NAME}_80.gif
+else
+	${CMD_SETCFG} ${QPKG_NAME} ${SYS_QPKG_CONF_FIELD_DESKTOP} "1" -f ${SYS_QPKG_CONFIG_FILE}
+	${CMD_SETCFG} ${QPKG_NAME} ${SYS_QPKG_CONF_FIELD_WEBUI} "/${QTS_desktop}" -f ${SYS_QPKG_CONFIG_FILE}
+	${CMD_CHMOD} 555 ${SYS_QPKG_DIR}/ui/api.cgi
+	${CMD_LN} -snf ${SYS_QPKG_DIR}/ui /home/httpd/cgi-bin/qpkg/${QPKG_NAME}
+	${CMD_LN} -sf ${SYS_QPKG_DIR}/ui/images/icon_80.png ${SYS_QPKG_DIR}/.qpkg_icon.gif
+	${CMD_LN} -sf ${SYS_QPKG_DIR}/ui/images/icon_80_gray.png ${SYS_QPKG_DIR}/.qpkg_icon_gray.gif
+fi
+${CMD_LN} -sf ${SYS_QPKG_DIR}/.qpkg_icon.gif /home/httpd/RSS/images/${QPKG_NAME}.gif
+${CMD_LN} -sf ${SYS_QPKG_DIR}/.qpkg_icon_gray.gif /home/httpd/RSS/images/${QPKG_NAME}_gray.gif
 }

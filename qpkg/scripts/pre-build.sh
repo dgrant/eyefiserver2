@@ -1,16 +1,16 @@
 #!/bin/sh
 NAME=eyefiserver
-mkdir config
+mkdir -p config shared/web/css shared/web/images shared/web/js shared/ui/css shared/ui/images shared/ui/langs
 ln ../etc/$NAME.conf config
-mkdir shared
 ln ../etc/init.d/$NAME shared
 ln ../usr/local/bin/$NAME.py shared
-mkdir shared/web
-ln ../web/* shared/web/ 2>/dev/null
+ln ../web/* shared/web/
 ln ../web/.htaccess shared/web/
-mkdir shared/web/css
 ln ../web/css/* shared/web/css/
-mkdir shared/web/images
 ln ../web/images/* shared/web/images/
-mkdir shared/web/js
 ln ../web/js/* shared/web/js/
+ln ui/* shared/ui/
+cp -d ui/api.cgi shared/ui/
+ln ui/css/* shared/ui/css/
+ln ui/images/* shared/ui/images/
+ln ui/langs/* shared/ui/langs/
