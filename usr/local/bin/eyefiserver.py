@@ -677,8 +677,7 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
             eyeFiLogger.debug("Creating folder " + uploadDir)
             if not os.path.isdir(uploadDir):
                 os.makedirs(uploadDir)
-                if uid != 0 and gid != 0:
-                    os.chown(uploadDir, uid, gid)
+                os.chown(uploadDir, uid, gid)
                 if file_mode != "":
                     os.chmod(uploadDir, int(dir_mode))
 
@@ -686,8 +685,7 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
             imagePath = os.path.join(uploadDir, member.name)
             eyeFiLogger.debug("imagePath " + imagePath)
             os.utime(imagePath, (member.mtime + timeoffset, member.mtime + timeoffset))
-            if uid != 0 and gid != 0:
-                os.chown(imagePath, uid, gid)
+            os.chown(imagePath, uid, gid)
             if file_mode != "":
                 os.chmod(imagePath, int(file_mode))
 
@@ -703,8 +701,7 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
                         xmpPath=os.path.join(uploadDir, xmpName)
                         eyeFiLogger.debug("Writing XMP file " + xmpPath)
                         self.writexmp(xmpPath,float(loc['location']['lat']),float(loc['location']['lng']))
-                        if uid != 0 and gid != 0:
-                            os.chown(xmpPath, uid, gid)
+                        os.chown(xmpPath, uid, gid)
                         if file_mode != "":
                             os.chmod(xmpPath, int(file_mode))
                 except:

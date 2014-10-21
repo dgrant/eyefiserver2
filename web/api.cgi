@@ -15,7 +15,7 @@ READLINK=/usr/bin/readlink
 SUDOUSR=/opt/bin/sudo
 SUDOOPT=/usr/bin/sudo
 function getparam {
-	$ECHO "$QUERY_STRING" | $SED -r "s|^.*$1=([^&]*).*$|\1|" | $SED "s/%20/ /g" | $SED "s/%3C/</g" | $SED "s/%3E/>/g" | $SED "s/%25/%/g"
+	$ECHO "$QUERY_STRING" | $SED -r "s|^.*$1=([^&]*).*$|\1|" | $SED "s/%20/ /g" | $SED "s/%3C/</g" | $SED "s/%3E/>/g" | $SED "s/%25/%/g" | $SED "s/%2F/\//g"
 }
 function getval {
 	$GREP $1: "$CONFIG" | $SED -r "s/^\s*$1\s*[:=]\s*(.*)\s*$/\1/"
@@ -41,7 +41,7 @@ case "$ACT" in
 		passtodaemon $ACT
 		;;
 	status)
-		$DAEMON $ACT
+		$DAEMON $ACT 2>/dev/null
 		;;
 	getval)
 		getval $(getparam name)
