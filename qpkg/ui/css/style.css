@@ -1,0 +1,104 @@
+.north-area.x-toolbar .eyefiserver-bt-help.x-btn td {
+	background-image:none;
+}
+.north-area.x-toolbar .eyefiserver-bt-help.x-btn {
+	background-image: url(/cgi-bin/qpkg/EyeFiServer/images/toolbar_icon.png);
+}
+.north-area.x-toolbar .eyefiserver-bt-help {
+	background-position: 0px 0px;
+	width: 24px;
+}
+.north-area.x-toolbar .eyefiserver-bt-help.x-btn-over {
+	background-position: -24px 0px;
+}
+.north-area.x-toolbar .eyefiserver-bt-help.x-btn-click {
+	background-position: -48px 0px;
+}
+.north-area .eyefiserver-bt-help .x-btn-text {
+	width: 100%;
+}
+.eyefiserver-main-menu .x-tree-node-icon {
+	background: url(/cgi-bin/qpkg/EyeFiServer/images/icons.png);
+	height: 16px;
+	width: 16px;
+}
+.eyefiserver-main-menu .x-tree-node-icon.eyefiserver-icon {
+	background-position: 0px 0px;
+}
+.eyefiserver-main-menu .x-tree-node-icon.eyefiserver-main-menu-cards-icon {
+	background-position: 0px -16px;
+}
+.eyefiserver-main-menu .x-tree-node-icon.eyefiserver-main-menu-upload-icon {
+	background-position: 0px -32px;
+}
+.eyefiserver-main-menu .x-tree-node-icon.eyefiserver-main-menu-geotagging-icon {
+	background-position: 0px -48px;
+}
+.eyefiserver-main-menu .x-tree-node-icon.eyefiserver-main-menu-log-icon {
+	background-position: 0px -64px;
+}
+.eyefiserver-main-menu .x-tree-arrows .x-tree-elbow-plus{
+	background-image: url();
+}
+.eyefiserver-main-menu .x-tree-arrows .x-tree-elbow-minus{
+	background-image: url();
+}
+.eyefiserver-main-menu .x-tree-arrows .x-tree-elbow-end-plus{
+	background-image: url();
+	width: 0;
+}
+.eyefiserver-main-menu .x-tree-arrows .x-tree-elbow-end-minus{
+	background-image: url();
+	width: 0;
+}
+.eyefiserver-main-menu .x-tree-ec-icon.x-tree-elbow,.eyefiserver-main-menu .x-tree-ec-icon.x-tree-elbow-end{
+	width: 0;
+}
+.eyefiserver-main-menu .x-tree-ec-icon{
+	margin-left: 6px;
+}
+.eyefiserver-main-menu .x-tree-node .x-tree-node-over{
+	background-color: #CAE5F3;
+	color: #1C5079;
+}
+.eyefiserver-main-menu .x-tree-node .x-tree-selected a span,.eyefiserver-main-menu .x-tree-node .x-tree-node-over a span{
+	background-color: transparent;
+}
+.eyefiserver-main-menu .x-tree-node .x-tree-selected a span{
+	color: #FFF;
+}
+.eyefiserver-main-menu .x-tree-node .x-tree-selected{
+	background-color: #33A6E7;
+	color: #FFF;
+}
+.eyefiserver-main-menu .x-tree-node a span,.eyefiserver-main-menu .x-dd-drag-ghost a span{
+	padding: 0 3px 0 6px;
+}
+.eyefiserver-main-menu .x-tree-node-anchor span{
+	font-size: 12px;
+}
+.eyefiserver-main-menu .x-tree-node-anchor span{
+	color: #000;
+}
+.eyefiserver-main-menu .x-tree-node-collapsed span,.eyefiserver-main-menu .x-tree-node-expanded span{
+	font-weight: bold;
+	color: #e24907;
+}
+.eyefiserver-main-menu .x-tree-node-el{
+	cursor: pointer;
+	height: 30px;
+	line-height: 29px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	padding: 0 12px 0 16px;
+}
+.eyefiserver-main-menu .x-tree-node-icon,.eyefiserver-main-menu .x-tree-ec-icon{
+	margin-top: 6px;
+}
+.eyefiserver-main-menu .x-tree-node-indent .x-tree-icon,.eyefiserver-main-menu .x-tree-node-indent .x-tree-elbow-line{
+	width: 22px;
+}
+.eyefiserver-main-menu .x-panel-body{
+	background-color: #FFF;
+}

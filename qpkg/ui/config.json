@@ -1,0 +1,28 @@
+{
+	"EyeFiServer" : {
+		"type" : "QPKGApp",
+		"defaultTitle" : "Eye-Fi Server",
+//		"qInternationalKey" : "_EYEFISERVER_APP_TITLE",
+//		"qDescription" : "_EYEFISERVER_APP_DESC",
+		"icon": "/cgi-bin/qpkg/EyeFiServer/images/icon_{0}.png",
+		"css" : [
+			"/cgi-bin/qpkg/EyeFiServer/css/style.css"
+		],
+		"langJs": "/cgi-bin/qpkg/EyeFiServer/langs/lang_{0}.js",
+		"langVar": "_EYEFISERVER",
+		"js" : [
+			"/cgi-bin/qpkg/EyeFiServer/eyefiserver_id_list.js",
+			"/cgi-bin/qpkg/EyeFiServer/eyefiserver_controller.js",
+			"/cgi-bin/qpkg/EyeFiServer/eyefiserver_main_menu.js",
+			"/cgi-bin/qpkg/EyeFiServer/eyefiserver_main_panel.js",
+			"/cgi-bin/qpkg/EyeFiServer/eyefiserver_cards_panel.js",
+			"/cgi-bin/qpkg/EyeFiServer/eyefiserver_upload_panel.js",
+			"/cgi-bin/qpkg/EyeFiServer/eyefiserver_geotagging_panel.js",
+			"/cgi-bin/qpkg/EyeFiServer/eyefiserver_log_panel.js",
+			"/cgi-bin/qpkg/EyeFiServer/eyefiserver_information_window.js",
+			"/cgi-bin/qpkg/EyeFiServer/eyefiserver_status_window.js",
+			"/cgi-bin/qpkg/EyeFiServer/eyefiserver_view.js"
+		],
+		"isAdminOnly" : true
+	}
+}
