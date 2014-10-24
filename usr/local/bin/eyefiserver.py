@@ -28,7 +28,7 @@ import sys
 import os
 import socket
 import thread
-import StringIO
+import cStringIO
 import traceback
 import errno
 import tempfile
@@ -605,7 +605,7 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
     def uploadPhoto(self,postData):
 
         # Take the postData string and work with it as if it were a file object
-        postDataInMemoryFile = StringIO.StringIO(postData)
+        postDataInMemoryFile = cStringIO.StringIO(postData)
 
         # Get the content-type header which looks something like this
         # content-type: multipart/form-data; boundary=---------------------------02468ace13579bdfcafebabef00d
@@ -650,24 +650,10 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
         if geotag_enable:
             geotag_accuracy = int(self.server.config.get('EyeFiServer','geotag_accuracy'))
 
-        imageTarPath = os.path.join(tempfile.gettempdir(), imageTarfileName)
-        eyeFiLogger.debug("Generated path " + imageTarPath)
-
-        fileHandle = open(imageTarPath, 'wb')
-        eyeFiLogger.debug("Opened file " + imageTarPath + " for binary writing")
-
-        fileHandle.write(form['FILENAME'][0])
-        eyeFiLogger.debug("Wrote file " + imageTarPath)
-
-        fileHandle.close()
-        eyeFiLogger.debug("Closed file " + imageTarPath)
-
-        eyeFiLogger.debug("Extracting TAR file " + imageTarPath)
-        try:
-            imageTarfile = tarfile.open(imageTarPath)
-        except ReadError, error:
-            eyeFiLogger.error("Failed to open %s" % imageTarPath)
-            raise
+        tarInMemoryFile = cStringIO.StringIO(form['FILENAME'][0])
+        imageTarfile = tarfile.open(mode='r', fileobj=tarInMemoryFile)
+        imageFilename = imageTarfileName.replace(".tar", "")
+        eyeFiLogger.debug("Extracting " + imageFilename + " from TAR file " + imageTarfileName)
 
         for member in imageTarfile.getmembers():
             # If timezone is a daylight savings timezone, and we are
@@ -712,11 +698,9 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
                 except:
                     eyeFiLogger.error("Error processing LOG file " + imagePath)
 
-        eyeFiLogger.debug("Closing TAR file " + imageTarPath)
+        eyeFiLogger.debug("Closing TAR file " + imageTarfileName)
         imageTarfile.close()
-
-        eyeFiLogger.debug("Deleting TAR file " + imageTarPath)
-        os.remove(imageTarPath)
+        tarInMemoryFile.close()
 
         # Create the XML document to send back
         doc = xml.dom.minidom.Document()
