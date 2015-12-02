@@ -167,7 +167,7 @@ if [ $($CMD_GETCFG System Version -d 3.8.0) \< "4.0.0" ]; then
 	${CMD_LN} -sf ${SYS_QPKG_DIR}/.qpkg_icon_80.gif /home/httpd/RSS/images/${QPKG_NAME}_80.gif
 else
 	${CMD_SETCFG} ${QPKG_NAME} ${SYS_QPKG_CONF_FIELD_DESKTOP} "1" -f ${SYS_QPKG_CONFIG_FILE}
-	${CMD_SETCFG} ${QPKG_NAME} ${SYS_QPKG_CONF_FIELD_WEBUI} "/${QTS_desktop}" -f ${SYS_QPKG_CONFIG_FILE}
+	${CMD_SETCFG} ${QPKG_NAME} ${SYS_QPKG_CONF_FIELD_WEBUI} "/QTS_desktop" -f ${SYS_QPKG_CONFIG_FILE}
 	${CMD_CHMOD} 555 ${SYS_QPKG_DIR}/ui/api.cgi
 	${CMD_LN} -snf ${SYS_QPKG_DIR}/ui /home/httpd/cgi-bin/qpkg/${QPKG_NAME}
 	${CMD_LN} -sf ${SYS_QPKG_DIR}/ui/images/icon_80.png ${SYS_QPKG_DIR}/.qpkg_icon.gif
