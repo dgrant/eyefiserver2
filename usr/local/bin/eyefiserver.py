@@ -343,6 +343,9 @@ class EyeFiContentHandler(ContentHandler):
 
 # Implements an EyeFi server
 class EyeFiServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
+    def __init__(self, server_address, handler, config_file):
+        BaseHTTPServer.HTTPServer.__init__(self, server_address, handler)
+        self._config_file = config_file
 
     def serve_forever(self):
         while self.run:
@@ -362,23 +365,26 @@ class EyeFiServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
 
     def reload_config(self, signum, frame):
         try:
-            configfile = sys.argv[2]
-            eyeFiLogger.info("Reloading configuration " + configfile)
-            self.config.read(configfile)
+            eyeFiLogger.info("Reloading configuration " + self._config_file)
+            self.config.read(self._config_file)
         except:
             eyeFiLogger.error("Error reloading configuration")
 
     def stop_server(self, signum, frame):
         try:
-            eyeFiLogger.info("Eye-Fi server stopped ")
-            self.stop()
+            self.run = False
+            eyeFiLogger.info("Eye-Fi server stopped")
+            
             self.socket.close()
+
+#            conn = httplib.HTTPConnection('localhost:59278')
+#            conn.request('QUIT', "/")
+#            response = conn.getresponse()
+#            eyeFiLogger.error("%s %s" % (response.status, response.reason))
         except:
-            eyeFiLogger.error("Error stopping server")
             traceback.print_exc()
 
     def server_bind(self):
-
         BaseHTTPServer.HTTPServer.server_bind(self)
         self.socket.settimeout(None)
         signal.signal(signal.SIGUSR1, self.reload_config)
@@ -402,15 +408,6 @@ class EyeFiServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
     def stop(self):
         self.run = False
 
-    # alt serve_forever method for python <2.6
-    # because we want a shutdown mech ..
-    #def serve(self):
-    #  while self.run:
-    #    self.handle_request()
-    #  self.socket.close()
-
-
-
 # This class is responsible for handling HTTP requests passed to it.
 # It implements the two most common HTTP methods, do_GET() and do_POST()
 
@@ -422,10 +419,16 @@ class EyeFiRequestHandler(BaseHTTPRequestHandler):
     server_version = "Eye-Fi Agent/2.0.4.0 (Windows XP SP2)"
 
     def do_QUIT (self):
-        eyeFiLogger.debug("Got StopServer request .. stopping server")
-        self.send_response(200)
-        self.end_headers()
-        self.server.stop()
+        try:
+            eyeFiLogger.debug("Got StopServer request .. stopping server")
+            self.server.stop()
+            self.send_response(200)
+            self.end_headers()
+        except:
+            eyeFiLogger.error("Got an an exception:")
+            eyeFiLogger.error(traceback.format_exc())
+            raise
+           
 
     def do_GET(self):
         try:
@@ -982,11 +985,15 @@ def runEyeFi():
     fileHandler.setFormatter(eyeFiLoggingFormat)
     eyeFiLogger.addHandler(fileHandler)
 
-    server_address = (config.get('EyeFiServer','host_name'), config.getint('EyeFiServer','host_port'))
+    try:
+        server_address = (config.get('EyeFiServer','host_name'), config.getint('EyeFiServer','host_port'))
+    except ConfigParser.NoSectionError:
+        logging.error("Error parsing configfile %s" % (configfile,))
+        raise
 
     # Create an instance of an HTTP server. Requests will be handled
     # by the class EyeFiRequestHandler
-    eyeFiServer = EyeFiServer(server_address, EyeFiRequestHandler)
+    eyeFiServer = EyeFiServer(server_address, EyeFiRequestHandler, sys.argv[2])
     eyeFiServer.config = config
     eyeFiLogger.info("Eye-Fi server started listening on port " + str(server_address[1]))
     eyeFiServer.serve_forever()
@@ -996,9 +1003,11 @@ class MyDaemon(Daemon):
         runEyeFi()
 
 def main():
+
     pid_file = '/tmp/eyefiserver.pid'
     result = 0
-    if len(sys.argv) > 2:
+    if len(sys.argv) >= 4:
+        # Turn paths into absolute paths
         if 'start' == sys.argv[1]:
             daemon = MyDaemon(pid_file)
             result = daemon.start()
